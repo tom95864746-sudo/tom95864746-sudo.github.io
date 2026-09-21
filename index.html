@@ -1,0 +1,2214 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <base href="https://tom95864746-sudo.github.io/">
+  <meta name="theme-color" content="#172554">
+  <meta name="description" content="Yuki 的多设备同步课程、任务、目标与复盘规划页">
+  <title>Yuki 日程与复盘 · 云同步</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f7fb;
+      --paper: #ffffff;
+      --ink: #172033;
+      --muted: #68758a;
+      --line: #dfe6ef;
+      --line-strong: #cbd5e1;
+      --navy: #172554;
+      --blue: #2563eb;
+      --blue-soft: #eff6ff;
+      --teal: #0f766e;
+      --teal-soft: #ecfdf5;
+      --violet: #7c3aed;
+      --violet-soft: #f5f3ff;
+      --amber: #b45309;
+      --amber-soft: #fffbeb;
+      --rose: #be123c;
+      --rose-soft: #fff1f2;
+      --green: #047857;
+      --green-soft: #ecfdf5;
+      --shadow: 0 14px 40px rgba(23, 37, 84, 0.08);
+      --radius: 18px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { background: var(--bg); }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 8% -10%, rgba(37, 99, 235, 0.10), transparent 34rem),
+        radial-gradient(circle at 92% 6%, rgba(15, 118, 110, 0.08), transparent 28rem),
+        var(--bg);
+      color: var(--ink);
+      font-size: 16px;
+      line-height: 1.5;
+    }
+    button, input, select, textarea { font: inherit; }
+    button { color: inherit; }
+    button, label, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+      outline: 3px solid rgba(37, 99, 235, 0.24);
+      outline-offset: 2px;
+    }
+    .shell { width: min(1440px, 100%); margin: 0 auto; padding: 18px 22px 48px; }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 16px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      flex: 0 0 auto;
+      border-radius: 15px;
+      background: linear-gradient(145deg, #1d4ed8, #172554);
+      color: white;
+      box-shadow: 0 9px 24px rgba(37, 99, 235, 0.25);
+      font-weight: 800;
+      letter-spacing: -0.05em;
+    }
+    .brand h1 { margin: 0; font-size: clamp(1.15rem, 2vw, 1.45rem); line-height: 1.2; letter-spacing: -0.03em; }
+    .brand p { margin: 3px 0 0; color: var(--muted); font-size: 0.86rem; }
+    .top-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+    .sync-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,.86);
+      padding: 6px 10px;
+      color: var(--muted);
+      font-size: .76rem;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+    .sync-chip::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      margin-right: 6px;
+      border-radius: 50%;
+      background: #94a3b8;
+    }
+    .sync-chip.syncing::before { background: #d97706; }
+    .sync-chip.synced::before { background: #059669; }
+    .sync-chip.offline::before, .sync-chip.error::before { background: #e11d48; }
+    .button {
+      border: 1px solid var(--line-strong);
+      border-radius: 11px;
+      background: var(--paper);
+      min-height: 42px;
+      padding: 9px 13px;
+      cursor: pointer;
+      font-weight: 650;
+      font-size: 0.9rem;
+      transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+    }
+    .button:hover { border-color: #94a3b8; background: #f8fafc; }
+    .button:active { transform: translateY(1px); }
+    .button.primary { background: var(--navy); border-color: var(--navy); color: white; }
+    .button.primary:hover { background: #1e3a8a; }
+    .button.soft { background: var(--blue-soft); border-color: #bfdbfe; color: #1d4ed8; }
+    .button.danger { background: var(--rose-soft); border-color: #fecdd3; color: var(--rose); }
+    .button.icon { width: 42px; padding: 0; display: inline-grid; place-items: center; font-size: 1.12rem; }
+    .button.small { min-height: 36px; padding: 7px 10px; font-size: 0.84rem; }
+    .button.ghost { background: transparent; border-color: transparent; }
+    .tabs {
+      display: inline-flex;
+      gap: 5px;
+      padding: 5px;
+      margin-bottom: 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.78);
+      box-shadow: 0 6px 24px rgba(23, 37, 84, 0.05);
+      backdrop-filter: blur(12px);
+    }
+    .tab {
+      min-height: 42px;
+      border: 0;
+      border-radius: 10px;
+      padding: 8px 17px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .tab.active { background: var(--navy); color: white; box-shadow: 0 6px 16px rgba(23, 37, 84, 0.18); }
+    .mobile-nav { display: none; }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 17px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+    .panel-head h2, .panel-head h3 { margin: 0; letter-spacing: -0.02em; }
+    .panel-head h2 { font-size: 1.05rem; }
+    .panel-head h3 { font-size: 0.98rem; }
+    .panel-head p { margin: 3px 0 0; color: var(--muted); font-size: 0.82rem; }
+    .panel-body { padding: 18px; }
+    .date-toolbar {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .date-center { text-align: center; }
+    .date-center strong { display: block; font-size: 1.18rem; letter-spacing: -0.03em; }
+    .date-center span { color: var(--muted); font-size: 0.85rem; }
+    .week-strip {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(66px, 1fr));
+      gap: 8px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      scrollbar-width: thin;
+      padding-bottom: 2px;
+    }
+    .day-chip {
+      min-width: 66px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: rgba(255, 255, 255, 0.82);
+      padding: 9px 7px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .day-chip span { display: block; color: var(--muted); font-size: 0.75rem; }
+    .day-chip strong { display: block; margin-top: 2px; font-size: 1rem; }
+    .day-chip.has-course::after {
+      content: "";
+      display: block;
+      width: 5px;
+      height: 5px;
+      margin: 5px auto 0;
+      border-radius: 50%;
+      background: var(--blue);
+    }
+    .day-chip.selected { border-color: var(--navy); background: var(--navy); color: white; }
+    .day-chip.selected span { color: #cbd5e1; }
+    .day-chip.selected::after { background: #93c5fd; }
+    .day-layout { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(320px, 0.75fr); gap: 16px; align-items: start; }
+    .daily-stack { display: grid; gap: 14px; }
+    .timeline-scroll {
+      position: relative;
+      max-height: min(72vh, 760px);
+      min-height: 560px;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      background: white;
+      scrollbar-width: thin;
+    }
+    .timeline-canvas { position: relative; height: 1536px; cursor: crosshair; user-select: none; }
+    .hour-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      border-top: 1px solid #dce4ee;
+      pointer-events: none;
+    }
+    .half-line {
+      position: absolute;
+      left: 64px;
+      right: 0;
+      border-top: 1px dashed #eef2f7;
+      pointer-events: none;
+    }
+    .hour-label {
+      position: absolute;
+      top: -11px;
+      left: 10px;
+      width: 44px;
+      padding-right: 8px;
+      background: white;
+      color: #8a98ab;
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 0.75rem;
+      text-align: right;
+    }
+    .timeline-events { position: absolute; inset: 0 12px 0 64px; }
+    .event {
+      position: absolute;
+      overflow: hidden;
+      border: 1px solid;
+      border-radius: 9px;
+      padding: 6px 8px;
+      cursor: pointer;
+      text-align: left;
+      box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+    }
+    .event-title { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.78rem; font-weight: 800; line-height: 1.25; }
+    .event-meta { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; font-size: 0.71rem; opacity: 0.78; line-height: 1.25; }
+    .event.course-theory { background: #eff6ff; border-color: #93c5fd; color: #172554; box-shadow: inset 3px 0 #2563eb, 0 3px 10px rgba(15, 23, 42, 0.08); }
+    .event.course-lab { background: #ecfdf5; border-color: #6ee7b7; color: #134e4a; box-shadow: inset 3px 0 #0f766e, 0 3px 10px rgba(15, 23, 42, 0.08); }
+    .event.task-med { background: #f5f3ff; border-color: #c4b5fd; color: #4c1d95; box-shadow: inset 3px 0 #7c3aed, 0 3px 10px rgba(15, 23, 42, 0.08); }
+    .event.task-eng { background: #fffbeb; border-color: #fcd34d; color: #78350f; box-shadow: inset 3px 0 #d97706, 0 3px 10px rgba(15, 23, 42, 0.08); }
+    .event.task-tech { background: #ecfeff; border-color: #67e8f9; color: #164e63; box-shadow: inset 3px 0 #0891b2, 0 3px 10px rgba(15, 23, 42, 0.08); }
+    .event.task-paper { background: #fdf4ff; border-color: #f0abfc; color: #701a75; box-shadow: inset 3px 0 #c026d3, 0 3px 10px rgba(15, 23, 42, 0.08); }
+    .event.task-life { background: #ecfdf5; border-color: #6ee7b7; color: #064e3b; box-shadow: inset 3px 0 #059669, 0 3px 10px rgba(15, 23, 42, 0.08); }
+    .event.conflict { background: #fff1f2; border-color: #fda4af; color: #881337; box-shadow: inset 3px 0 #e11d48, 0 3px 10px rgba(15, 23, 42, 0.08); }
+    .event.completed { opacity: 0.55; text-decoration: line-through; }
+    .now-line { position: absolute; left: 58px; right: 8px; z-index: 20; display: flex; align-items: center; pointer-events: none; }
+    .now-line::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: #e11d48; }
+    .now-line::after { content: ""; flex: 1; height: 1px; background: #e11d48; }
+    .card-list { display: grid; gap: 9px; }
+    .todo-row, .task-row, .item-row, .habit-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: white;
+      padding: 11px;
+    }
+    .todo-row.done, .task-row.done { opacity: 0.58; }
+    .todo-row.done .row-title, .task-row.done .row-title { text-decoration: line-through; }
+    .check {
+      width: 22px;
+      height: 22px;
+      flex: 0 0 auto;
+      margin-top: 1px;
+      accent-color: var(--blue);
+      cursor: pointer;
+    }
+    .row-main { min-width: 0; flex: 1; }
+    .row-title { display: block; font-weight: 750; overflow-wrap: anywhere; }
+    .row-meta { margin-top: 3px; color: var(--muted); font-size: 0.78rem; }
+    .row-actions { display: flex; gap: 5px; flex: 0 0 auto; }
+    .mini-button {
+      min-width: 34px;
+      min-height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #f8fafc;
+      cursor: pointer;
+      padding: 5px 8px;
+      font-size: 0.8rem;
+      font-weight: 750;
+    }
+    .mini-button:hover { background: #eef2f7; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 999px;
+      padding: 3px 8px;
+      background: #eef2f7;
+      color: #475569;
+      font-size: 0.72rem;
+      font-weight: 750;
+    }
+    .badge.blue { background: var(--blue-soft); color: #1d4ed8; }
+    .badge.green { background: var(--green-soft); color: var(--green); }
+    .badge.amber { background: var(--amber-soft); color: var(--amber); }
+    .badge.violet { background: var(--violet-soft); color: var(--violet); }
+    .empty {
+      border: 1px dashed var(--line-strong);
+      border-radius: 13px;
+      padding: 22px 16px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 0.88rem;
+    }
+    .inline-form { display: flex; gap: 8px; margin-top: 10px; }
+    .field {
+      width: 100%;
+      min-height: 43px;
+      border: 1px solid var(--line-strong);
+      border-radius: 10px;
+      background: white;
+      padding: 9px 11px;
+      color: var(--ink);
+    }
+    textarea.field { min-height: 128px; resize: vertical; line-height: 1.55; }
+    .field-label { display: grid; gap: 6px; color: #475569; font-size: 0.82rem; font-weight: 700; }
+    .reflection-status { min-height: 20px; margin-top: 7px; color: var(--muted); font-size: 0.76rem; }
+    .progress-track { height: 9px; overflow: hidden; border-radius: 999px; background: #e8edf4; }
+    .progress-bar { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #2563eb, #0f766e); transition: width 180ms ease; }
+    .goal-summary { display: grid; gap: 10px; }
+    .goal-mini { display: grid; gap: 6px; }
+    .goal-mini-line { display: flex; justify-content: space-between; gap: 10px; font-size: 0.84rem; }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 11px; margin-bottom: 15px; }
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 14px;
+      box-shadow: 0 7px 22px rgba(23, 37, 84, 0.05);
+    }
+    .stat span { display: block; color: var(--muted); font-size: 0.78rem; }
+    .stat strong { display: block; margin-top: 4px; font-size: 1.35rem; letter-spacing: -0.04em; }
+    .library-toolbar {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) auto auto;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .filter-group { display: inline-flex; gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 11px; background: white; }
+    .filter {
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      padding: 7px 10px;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+    .filter.active { background: var(--navy); color: white; }
+    .task-table { display: grid; gap: 9px; }
+    .task-row { align-items: center; }
+    .task-row .check { margin-top: 0; }
+    .goal-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .goal-card { border: 1px solid var(--line); border-radius: var(--radius); background: white; box-shadow: var(--shadow); overflow: hidden; }
+    .goal-card-head { padding: 17px 18px 13px; border-bottom: 1px solid var(--line); }
+    .goal-card-title { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+    .goal-card h3 { margin: 0; font-size: 1.02rem; }
+    .goal-card p { margin: 4px 0 0; color: var(--muted); font-size: 0.8rem; }
+    .goal-percent { color: var(--blue); font-size: 1.3rem; font-weight: 850; letter-spacing: -0.04em; }
+    .goal-card-body { padding: 15px 18px 18px; }
+    .goal-items { display: grid; gap: 8px; margin-top: 13px; }
+    .item-row { align-items: center; padding: 9px; }
+    .item-count { min-width: 70px; text-align: center; font-size: 0.82rem; font-weight: 750; }
+    .formula-note {
+      margin: 0 0 14px;
+      border-left: 4px solid var(--blue);
+      border-radius: 9px;
+      background: var(--blue-soft);
+      padding: 11px 13px;
+      color: #1e3a8a;
+      font-size: 0.84rem;
+    }
+    footer { padding: 20px 2px 0; color: var(--muted); font-size: 0.78rem; text-align: center; }
+    dialog {
+      width: min(560px, calc(100% - 26px));
+      max-height: min(88vh, 820px);
+      overflow: auto;
+      border: 0;
+      border-radius: 20px;
+      padding: 0;
+      color: var(--ink);
+      box-shadow: 0 24px 80px rgba(15, 23, 42, 0.28);
+    }
+    dialog::backdrop { background: rgba(15, 23, 42, 0.56); backdrop-filter: blur(3px); }
+    .dialog-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+    .dialog-head h2 { margin: 0; font-size: 1.05rem; }
+    .dialog-body { display: grid; gap: 14px; padding: 19px 20px; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .form-grid .full { grid-column: 1 / -1; }
+    .switch-line { display: flex; align-items: center; gap: 9px; }
+    .dialog-actions { display: flex; justify-content: space-between; gap: 10px; padding: 0 20px 20px; }
+    .dialog-actions-right { display: flex; justify-content: flex-end; gap: 9px; margin-left: auto; }
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 100;
+      max-width: min(360px, calc(100% - 36px));
+      border-radius: 13px;
+      background: #0f172a;
+      color: white;
+      padding: 11px 14px;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.3);
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: opacity 160ms ease, transform 160ms ease;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .auth-shell {
+      display: grid;
+      place-items: center;
+      min-height: min(72vh, 720px);
+      padding: 28px 0;
+    }
+    .auth-card {
+      width: min(470px, 100%);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: rgba(255,255,255,.96);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .auth-hero {
+      padding: 26px 24px 20px;
+      background: linear-gradient(145deg, #172554, #1d4ed8);
+      color: white;
+    }
+    .auth-hero h2 { margin: 0; font-size: 1.32rem; letter-spacing: -.03em; }
+    .auth-hero p { margin: 8px 0 0; color: #dbeafe; font-size: .88rem; }
+    .auth-body { display: grid; gap: 14px; padding: 22px 24px 24px; }
+    .auth-note {
+      border-radius: 11px;
+      background: var(--blue-soft);
+      padding: 10px 12px;
+      color: #1e3a8a;
+      font-size: .8rem;
+    }
+    .auth-error { min-height: 22px; color: var(--rose); font-size: .8rem; }
+    body.auth-mode .tabs,
+    body.auth-mode .mobile-nav,
+    body.auth-mode footer,
+    body.auth-mode [data-action="export-data"],
+    body.auth-mode [data-action="import-data"] { display: none !important; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    @media (max-width: 980px) {
+      .day-layout { grid-template-columns: 1fr; }
+      .daily-stack { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .daily-stack .wide { grid-column: 1 / -1; }
+      .goal-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 700px) {
+      body { padding-bottom: calc(70px + env(safe-area-inset-bottom)); }
+      .shell { padding: 13px 12px 30px; }
+      .topbar { align-items: flex-start; }
+      .brand-mark { width: 42px; height: 42px; border-radius: 13px; }
+      .brand p { display: none; }
+      .top-actions .button span { display: none; }
+      .tabs { display: none; }
+      .mobile-nav {
+        position: fixed;
+        left: 10px;
+        right: 10px;
+        bottom: calc(8px + env(safe-area-inset-bottom));
+        z-index: 50;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 5px;
+        border: 1px solid rgba(203, 213, 225, 0.92);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.93);
+        padding: 5px;
+        box-shadow: 0 16px 45px rgba(15, 23, 42, 0.18);
+        backdrop-filter: blur(14px);
+      }
+      .mobile-nav .tab { min-height: 48px; padding: 7px 4px; font-size: 0.82rem; }
+      .date-toolbar { grid-template-columns: auto minmax(0, 1fr) auto; }
+      .date-center strong { font-size: 1.02rem; }
+      .date-center span { font-size: 0.76rem; }
+      .week-strip { margin-inline: -2px; }
+      .day-layout { gap: 12px; }
+      .daily-stack { grid-template-columns: 1fr; }
+      .daily-stack .wide { grid-column: auto; }
+      .timeline-scroll { min-height: 540px; max-height: 68vh; }
+      .panel-head, .panel-body { padding-inline: 14px; }
+      .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .library-toolbar { grid-template-columns: 1fr; }
+      .filter-group { overflow-x: auto; }
+      .task-row { align-items: flex-start; }
+      .goal-card-head, .goal-card-body { padding-inline: 14px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-grid .full { grid-column: auto; }
+      .dialog-actions { flex-wrap: wrap; }
+      .toast { bottom: calc(82px + env(safe-area-inset-bottom)); }
+    }
+    @media print {
+      .top-actions, .tabs, .mobile-nav, .button, footer { display: none !important; }
+      body { background: white; }
+      .shell { width: 100%; padding: 0; }
+      .panel, .goal-card { box-shadow: none; }
+      .timeline-scroll { max-height: none; overflow: visible; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">Y</div>
+        <div>
+          <h1>Yuki 日程与复盘</h1>
+          <p>多设备同步 · 24 小时时间轴 · 加权学习进度</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <span id="syncStatus" class="sync-chip" hidden>等待登录</span>
+        <button class="button small" type="button" data-action="export-data" title="导出全部个人数据">⇩ <span>导出备份</span></button>
+        <button class="button small" type="button" data-action="import-data" title="从备份恢复">⇧ <span>导入备份</span></button>
+        <button id="logoutButton" class="button small" type="button" data-action="logout" hidden>退出</button>
+      </div>
+    </header>
+
+    <nav class="tabs" aria-label="主要页面">
+      <button class="tab active" type="button" data-view="day">今日日程</button>
+      <button class="tab" type="button" data-view="tasks">任务库</button>
+      <button class="tab" type="button" data-view="goals">目标进度</button>
+    </nav>
+
+    <main id="app" aria-live="polite"></main>
+    <footer>数据会加密传输并按账号隔离；浏览器同时保留离线副本。建议定期导出备份。</footer>
+  </div>
+
+  <nav class="mobile-nav" aria-label="移动端导航">
+    <button class="tab active" type="button" data-view="day">日程</button>
+    <button class="tab" type="button" data-view="tasks">任务库</button>
+    <button class="tab" type="button" data-view="goals">目标</button>
+  </nav>
+
+  <input id="importFile" class="sr-only" type="file" accept=".json,application/json">
+
+  <dialog id="taskDialog">
+    <form id="taskForm">
+      <div class="dialog-head">
+        <h2 id="taskDialogTitle">新增任务</h2>
+        <button class="button icon ghost" type="button" data-action="close-dialog" aria-label="关闭">×</button>
+      </div>
+      <div class="dialog-body">
+        <div class="form-grid">
+          <label class="field-label full">任务名称
+            <input id="taskTitle" class="field" required maxlength="80" placeholder="例如：完成诊断学循环系统第 2 章">
+          </label>
+          <label class="field-label">分类
+            <select id="taskCategory" class="field">
+              <option>医学</option>
+              <option>英语</option>
+              <option>工科 / 机器人</option>
+              <option>论文</option>
+              <option>生活</option>
+            </select>
+          </label>
+          <label class="field-label">安排日期（可留空进入收集箱）
+            <input id="taskDate" class="field" type="date">
+          </label>
+          <label class="switch-line full">
+            <input id="taskTimed" class="check" type="checkbox">
+            <span><strong>放入时间轴</strong><br><small style="color:var(--muted)">关闭时只显示在当日 To-do</small></span>
+          </label>
+          <label class="field-label timed-field">开始时间
+            <input id="taskStart" class="field" type="time" step="900">
+          </label>
+          <label class="field-label timed-field">结束时间
+            <input id="taskEnd" class="field" type="time" step="900">
+          </label>
+          <label class="field-label full">备注
+            <textarea id="taskNotes" class="field" maxlength="500" placeholder="资料、完成标准或下一步"></textarea>
+          </label>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button id="taskDelete" class="button danger" type="button" data-action="delete-task" hidden>删除</button>
+        <div class="dialog-actions-right">
+          <button class="button" type="button" data-action="close-dialog">取消</button>
+          <button class="button primary" type="submit">保存任务</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="goalDialog">
+    <form id="goalForm">
+      <div class="dialog-head">
+        <h2 id="goalDialogTitle">新增目标</h2>
+        <button class="button icon ghost" type="button" data-action="close-dialog" aria-label="关闭">×</button>
+      </div>
+      <div class="dialog-body">
+        <div class="form-grid">
+          <label class="field-label full">目标名称
+            <input id="goalTitle" class="field" required maxlength="80" placeholder="例如：诊断学期末复习">
+          </label>
+          <label class="field-label">分类
+            <select id="goalCategory" class="field">
+              <option>医学</option>
+              <option>英语</option>
+              <option>工科 / 机器人</option>
+              <option>论文</option>
+              <option>生活</option>
+            </select>
+          </label>
+          <label class="field-label">截止日期
+            <input id="goalDeadline" class="field" type="date">
+          </label>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button id="goalDelete" class="button danger" type="button" data-action="delete-goal" hidden>删除目标</button>
+        <div class="dialog-actions-right">
+          <button class="button" type="button" data-action="close-dialog">取消</button>
+          <button class="button primary" type="submit">保存目标</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="itemDialog">
+    <form id="itemForm">
+      <div class="dialog-head">
+        <h2 id="itemDialogTitle">新增进度项</h2>
+        <button class="button icon ghost" type="button" data-action="close-dialog" aria-label="关闭">×</button>
+      </div>
+      <div class="dialog-body">
+        <div class="form-grid">
+          <label class="field-label full">章节 / 真题名称
+            <input id="itemTitle" class="field" required maxlength="100" placeholder="例如：循环系统章节">
+          </label>
+          <label class="field-label">单位
+            <select id="itemUnit" class="field">
+              <option value="章节">章节</option>
+              <option value="套">真题套数</option>
+              <option value="页">页数</option>
+              <option value="次">次数</option>
+              <option value="项">其他</option>
+            </select>
+          </label>
+          <label class="field-label">重要权重
+            <input id="itemWeight" class="field" type="number" min="0.1" max="100" step="0.1" value="1" required>
+          </label>
+          <label class="field-label">目标产出
+            <input id="itemTarget" class="field" type="number" min="0.1" max="9999" step="0.1" value="1" required>
+          </label>
+          <label class="field-label">已完成
+            <input id="itemCompleted" class="field" type="number" min="0" max="9999" step="0.1" value="0" required>
+          </label>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button id="itemDelete" class="button danger" type="button" data-action="delete-item" hidden>删除进度项</button>
+        <div class="dialog-actions-right">
+          <button class="button" type="button" data-action="close-dialog">取消</button>
+          <button class="button primary" type="submit">保存进度项</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>window.__PLANNER_CONFIG__={"mode":"cloud","supabaseUrl":"https://icgsmrjphbstrffkmxvz.supabase.co","supabaseAnonKey":"sb_publishable_KBLNKMqd5VD6-c_WgH3Y-g_4jtFSnYU","serviceWorkerUrl":"https://tom95864746-sudo.github.io/sw.js"};</script>
+  <script>(function () {
+  "use strict";
+
+  var COURSE_EVENTS = [{"id":"course-001","date":"2026-09-21","title":"医学心理学","kind":"理论","location":"北苑2804","teacher":"陈晨","week":1,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-002","date":"2026-09-21","title":"外科学总论","kind":"理论","location":"北苑2804","teacher":"何永刚","week":1,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-003","date":"2026-09-21","title":"外科学总论","kind":"理论","location":"北苑2804","teacher":"秦啸龙","week":1,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-004","date":"2026-09-22","title":"诊断学综合I","kind":"理论","location":"北苑2610","teacher":"张进安","week":1,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-005","date":"2026-09-22","title":"灾难与急救","kind":"理论","location":"北苑2804","teacher":"万健","week":1,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-006","date":"2026-09-22","title":"预防医学","kind":"理论","location":"北苑2810","teacher":"唐红梅","week":1,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-007","date":"2026-09-22","title":"体育(5)","kind":"实验","location":"北苑操场1","teacher":"唐秀松","week":1,"sections":"10-11节","startMinute":1050,"endMinute":1140,"conflict":false},{"id":"course-008","date":"2026-09-24","title":"习近平新时代中国特色社会主义思想概论","kind":"理论","location":"北苑2804","teacher":"张学娟","week":1,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-009","date":"2026-09-24","title":"毛泽东思想和中国特色社会主义理论体系概论","kind":"理论","location":"北苑2804","teacher":"马小红","week":1,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-010","date":"2026-09-24","title":"医学伦理学","kind":"理论","location":"北苑2804","teacher":"王瑾","week":1,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-011","date":"2026-09-25","title":"医学遗传学A1","kind":"理论","location":"北苑2804","teacher":"王辉","week":1,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-012","date":"2026-09-25","title":"习近平新时代中国特色社会主义思想概论","kind":"理论","location":"北苑2804","teacher":"张学娟","week":1,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-013","date":"2026-09-28","title":"医学心理学","kind":"理论","location":"北苑2804","teacher":"伍毅","week":2,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-014","date":"2026-09-28","title":"外科学总论","kind":"理论","location":"北苑2804","teacher":"秦啸龙","week":2,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-015","date":"2026-09-28","title":"外科学总论","kind":"理论","location":"北苑2804","teacher":"王炜","week":2,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-016","date":"2026-09-29","title":"诊断学综合I","kind":"理论","location":"北苑2610","teacher":"宋荣华","week":2,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-017","date":"2026-09-29","title":"灾难与急救","kind":"理论","location":"北苑2804","teacher":"诸海军","week":2,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-018","date":"2026-09-29","title":"预防医学","kind":"理论","location":"北苑2810","teacher":"高静","week":2,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-019","date":"2026-09-29","title":"体育(5)","kind":"实验","location":"北苑操场1","teacher":"唐秀松","week":2,"sections":"10-11节","startMinute":1050,"endMinute":1140,"conflict":false},{"id":"course-020","date":"2026-09-30","title":"预防医学","kind":"实验","location":"北苑2807","teacher":"高静","week":2,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-021","date":"2026-09-30","title":"外科学总论","kind":"实验","location":"实验动物中心105","teacher":"吴冠林,李加才 / 刘玉伶 / 李豆豆 / 张雨萍,陈甜甜","week":2,"sections":"5-8节","startMinute":780,"endMinute":970,"conflict":false},{"id":"course-022","date":"2026-10-01","title":"习近平新时代中国特色社会主义思想概论","kind":"理论","location":"北苑2804","teacher":"张学娟","week":2,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-023","date":"2026-10-01","title":"毛泽东思想和中国特色社会主义理论体系概论","kind":"理论","location":"北苑2804","teacher":"马小红","week":2,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-024","date":"2026-10-02","title":"医学遗传学A1","kind":"理论","location":"北苑2804","teacher":"王辉","week":2,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-025","date":"2026-10-02","title":"习近平新时代中国特色社会主义思想概论","kind":"理论","location":"北苑2804","teacher":"张学娟","week":2,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-026","date":"2026-10-05","title":"医学心理学","kind":"理论","location":"北苑2804","teacher":"陈晨","week":3,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-027","date":"2026-10-05","title":"基础医学综合理论考试","kind":"理论","location":"未排地点","teacher":"李志宏,杨智昉,徐静,吴兰,吴学平,张嘉阳,覃霞","week":3,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-028","date":"2026-10-06","title":"诊断学综合I","kind":"理论","location":"北苑2610","teacher":"余艳芳","week":3,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-029","date":"2026-10-06","title":"灾难与急救","kind":"实验","location":"北苑2804","teacher":"赵庆忠 / 周锐","week":3,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-030","date":"2026-10-06","title":"预防医学","kind":"理论","location":"北苑2810","teacher":"张淑颖","week":3,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-031","date":"2026-10-06","title":"体育(5)","kind":"实验","location":"北苑操场1","teacher":"唐秀松","week":3,"sections":"10-11节","startMinute":1050,"endMinute":1140,"conflict":false},{"id":"course-032","date":"2026-10-08","title":"习近平新时代中国特色社会主义思想概论","kind":"理论","location":"北苑2804","teacher":"张学娟","week":3,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-033","date":"2026-10-08","title":"毛泽东思想和中国特色社会主义理论体系概论","kind":"理论","location":"北苑2804","teacher":"马小红","week":3,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-034","date":"2026-10-08","title":"医学伦理学","kind":"理论","location":"北苑2804","teacher":"王萍","week":3,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-035","date":"2026-10-09","title":"医学遗传学A1","kind":"理论","location":"北苑2804","teacher":"王辉","week":3,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-036","date":"2026-10-09","title":"习近平新时代中国特色社会主义思想概论","kind":"理论","location":"北苑2804","teacher":"张学娟","week":3,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-037","date":"2026-10-12","title":"医学心理学","kind":"理论","location":"北苑2804","teacher":"王俐佳","week":4,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-038","date":"2026-10-12","title":"外科学总论","kind":"理论","location":"北苑2804","teacher":"李志红","week":4,"sections":"5-8节","startMinute":780,"endMinute":970,"conflict":false},{"id":"course-039","date":"2026-10-13","title":"诊断学综合I","kind":"理论","location":"北苑2610","teacher":"金丽雯","week":4,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-040","date":"2026-10-13","title":"灾难与急救","kind":"理论","location":"北苑2804","teacher":"陈嵩","week":4,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-041","date":"2026-10-13","title":"预防医学","kind":"实验","location":"北苑2810","teacher":"张淑颖","week":4,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-042","date":"2026-10-13","title":"体育(5)","kind":"实验","location":"北苑操场1","teacher":"唐秀松","week":4,"sections":"10-11节","startMinute":1050,"endMinute":1140,"conflict":false},{"id":"course-043","date":"2026-10-14","title":"毛泽东思想和中国特色社会主义理论体系概论","kind":"理论","location":"南苑W103","teacher":"马小红","week":4,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-044","date":"2026-10-15","title":"习近平新时代中国特色社会主义思想概论","kind":"理论","location":"北苑2804","teacher":"张学娟","week":4,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-045","date":"2026-10-15","title":"毛泽东思想和中国特色社会主义理论体系概论","kind":"理论","location":"北苑2804","teacher":"马小红","week":4,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-046","date":"2026-10-15","title":"医学伦理学","kind":"理论","location":"北苑2804","teacher":"吴洁","week":4,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-047","date":"2026-10-15","title":"预防医学","kind":"理论","location":"北苑2807","teacher":"张淑颖","week":4,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-048","date":"2026-10-16","title":"医学遗传学A1","kind":"理论","location":"北苑2804","teacher":"王辉","week":4,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-049","date":"2026-10-16","title":"习近平新时代中国特色社会主义思想概论","kind":"理论","location":"北苑2804","teacher":"张学娟","week":4,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-050","date":"2026-10-19","title":"流行病学","kind":"理论","location":"北苑2804","teacher":"牛静雅","week":5,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-051","date":"2026-10-19","title":"医学心理学","kind":"理论","location":"北苑2804","teacher":"王军","week":5,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-052","date":"2026-10-19","title":"外科学总论","kind":"理论","location":"北苑2804","teacher":"何永刚","week":5,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-053","date":"2026-10-19","title":"外科学总论","kind":"理论","location":"北苑2804","teacher":"王炜","week":5,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-054","date":"2026-10-20","title":"诊断学综合I","kind":"理论","location":"北苑2610","teacher":"吕庆平","week":5,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-055","date":"2026-10-20","title":"灾难与急救","kind":"理论","location":"北苑2804","teacher":"秦龙","week":5,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-056","date":"2026-10-20","title":"预防医学","kind":"理论","location":"北苑2810","teacher":"牛静雅","week":5,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-057","date":"2026-10-21","title":"习近平新时代中国特色社会主义思想概论","kind":"实验","location":"校外场地","teacher":"张学娟","week":5,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-058","date":"2026-10-21","title":"毛泽东思想和中国特色社会主义理论体系概论","kind":"理论","location":"南苑W103","teacher":"马小红","week":5,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-059","date":"2026-10-21","title":"外科学总论","kind":"实验","location":"实验动物中心105","teacher":"吴冠林,李加才 / 李豆豆 / 张雨萍,陈甜甜 / 张淑颖","week":5,"sections":"5-8节","startMinute":780,"endMinute":970,"conflict":false},{"id":"course-060","date":"2026-10-22","title":"习近平新时代中国特色社会主义思想概论","kind":"理论","location":"北苑2804","teacher":"张学娟","week":5,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-061","date":"2026-10-22","title":"毛泽东思想和中国特色社会主义理论体系概论","kind":"理论","location":"北苑2804","teacher":"马小红","week":5,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-062","date":"2026-10-22","title":"医学伦理学","kind":"理论","location":"北苑2804","teacher":"马大喜","week":5,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-063","date":"2026-10-23","title":"医学遗传学A1","kind":"理论","location":"北苑2804","teacher":"王辉","week":5,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-064","date":"2026-10-23","title":"流行病学","kind":"理论","location":"北苑2804","teacher":"牛静雅","week":5,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-065","date":"2026-10-26","title":"流行病学","kind":"实验","location":"南苑7号楼第二机房（3楼）","teacher":"赵苗苗,吴冠林","week":6,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-066","date":"2026-10-26","title":"医学心理学","kind":"理论","location":"北苑2804","teacher":"王军","week":6,"sections":"3节","startMinute":600,"endMinute":640,"conflict":false},{"id":"course-067","date":"2026-10-26","title":"医学心理学","kind":"实验","location":"北苑2804","teacher":"王军","week":6,"sections":"4节","startMinute":650,"endMinute":690,"conflict":false},{"id":"course-068","date":"2026-10-26","title":"基础医学综合理论考试","kind":"理论","location":"未排地点","teacher":"李志宏,杨智昉,徐静,吴兰,吴学平,张嘉阳,覃霞","week":6,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":true},{"id":"course-069","date":"2026-10-26","title":"外科学总论","kind":"理论","location":"北苑2804","teacher":"郭海军","week":6,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":true},{"id":"course-070","date":"2026-10-26","title":"外科学总论","kind":"理论","location":"北苑2804","teacher":"夏胜利","week":6,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-071","date":"2026-10-27","title":"诊断学综合I","kind":"理论","location":"北苑2610","teacher":"杨瑞凤","week":6,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-072","date":"2026-10-27","title":"毛泽东思想和中国特色社会主义理论体系概论","kind":"实验","location":"校外场地","teacher":"马小红","week":6,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-073","date":"2026-10-27","title":"灾难与急救","kind":"实验","location":"北苑2804","teacher":"周锐 / 韩振","week":6,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-074","date":"2026-10-27","title":"预防医学","kind":"理论","location":"北苑2810","teacher":"牛静雅","week":6,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-075","date":"2026-10-28","title":"毛泽东思想和中国特色社会主义理论体系概论","kind":"理论","location":"南苑W103","teacher":"马小红","week":6,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-076","date":"2026-10-29","title":"习近平新时代中国特色社会主义思想概论","kind":"理论","location":"北苑2804","teacher":"张学娟","week":6,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-077","date":"2026-10-29","title":"毛泽东思想和中国特色社会主义理论体系概论","kind":"理论","location":"北苑2804","teacher":"马小红","week":6,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-078","date":"2026-10-29","title":"医学伦理学","kind":"理论","location":"北苑2804","teacher":"王鹰","week":6,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-079","date":"2026-10-29","title":"预防医学","kind":"实验","location":"北苑2807","teacher":"牛静雅","week":6,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-080","date":"2026-10-30","title":"医学遗传学A1","kind":"理论","location":"北苑2804","teacher":"王辉","week":6,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-081","date":"2026-10-30","title":"流行病学","kind":"理论","location":"北苑2804","teacher":"牛静雅","week":6,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-082","date":"2026-11-02","title":"流行病学","kind":"实验","location":"南苑7号楼第二机房（3楼）","teacher":"赵苗苗,吴冠林","week":7,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-083","date":"2026-11-02","title":"医学心理学","kind":"理论","location":"北苑2804","teacher":"吴贻明","week":7,"sections":"3节","startMinute":600,"endMinute":640,"conflict":false},{"id":"course-084","date":"2026-11-02","title":"医学心理学","kind":"实验","location":"北苑2804","teacher":"吴贻明","week":7,"sections":"4节","startMinute":650,"endMinute":690,"conflict":false},{"id":"course-085","date":"2026-11-02","title":"基础医学综合理论考试","kind":"理论","location":"未排地点","teacher":"李志宏,杨智昉,徐静,吴兰,吴学平,张嘉阳,覃霞","week":7,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":true},{"id":"course-086","date":"2026-11-02","title":"外科学总论","kind":"理论","location":"北苑2804","teacher":"赵邦娥","week":7,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":true},{"id":"course-087","date":"2026-11-02","title":"外科学总论","kind":"理论","location":"北苑2804","teacher":"刘海健","week":7,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-088","date":"2026-11-03","title":"诊断学综合I","kind":"理论","location":"北苑2610","teacher":"毛智荣","week":7,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-089","date":"2026-11-03","title":"灾难与急救","kind":"理论","location":"北苑2804","teacher":"樊聪慧","week":7,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-090","date":"2026-11-03","title":"预防医学","kind":"理论","location":"北苑2810","teacher":"高静","week":7,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-091","date":"2026-11-04","title":"习近平新时代中国特色社会主义思想概论","kind":"实验","location":"校外场地","teacher":"张学娟","week":7,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-092","date":"2026-11-04","title":"毛泽东思想和中国特色社会主义理论体系概论","kind":"理论","location":"南苑W103","teacher":"马小红","week":7,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-093","date":"2026-11-04","title":"外科学总论","kind":"实验","location":"实验动物中心105","teacher":"吴冠林,李加才 / 李豆豆 / 张雨萍,陈甜甜 / 张淑颖","week":7,"sections":"5-8节","startMinute":780,"endMinute":970,"conflict":false},{"id":"course-094","date":"2026-11-05","title":"习近平新时代中国特色社会主义思想概论","kind":"理论","location":"北苑2804","teacher":"张学娟","week":7,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-095","date":"2026-11-05","title":"毛泽东思想和中国特色社会主义理论体系概论","kind":"理论","location":"北苑2804","teacher":"马小红","week":7,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-096","date":"2026-11-05","title":"医学伦理学","kind":"理论","location":"北苑2804","teacher":"张頔","week":7,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-097","date":"2026-11-06","title":"医学遗传学A1","kind":"理论","location":"北苑2804","teacher":"王辉","week":7,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-098","date":"2026-11-06","title":"流行病学","kind":"理论","location":"北苑2804","teacher":"牛静雅","week":7,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-099","date":"2026-11-09","title":"流行病学","kind":"实验","location":"南苑7号楼第二机房（3楼）","teacher":"赵苗苗,吴冠林","week":8,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-100","date":"2026-11-09","title":"医学心理学","kind":"理论","location":"北苑2804","teacher":"李霄凌","week":8,"sections":"3节","startMinute":600,"endMinute":640,"conflict":false},{"id":"course-101","date":"2026-11-09","title":"医学心理学","kind":"实验","location":"北苑2804","teacher":"李霄凌","week":8,"sections":"4节","startMinute":650,"endMinute":690,"conflict":false},{"id":"course-102","date":"2026-11-09","title":"基础医学综合理论考试","kind":"理论","location":"未排地点","teacher":"李志宏,杨智昉,徐静,吴兰,吴学平,张嘉阳,覃霞","week":8,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":true},{"id":"course-103","date":"2026-11-09","title":"外科学总论","kind":"理论","location":"北苑2804","teacher":"赵邦娥","week":8,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":true},{"id":"course-104","date":"2026-11-09","title":"外科学总论","kind":"理论","location":"北苑2804","teacher":"李晓妹","week":8,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-105","date":"2026-11-10","title":"诊断学综合I","kind":"理论","location":"北苑2610","teacher":"杨玮","week":8,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-106","date":"2026-11-10","title":"毛泽东思想和中国特色社会主义理论体系概论","kind":"实验","location":"校外场地","teacher":"马小红","week":8,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-107","date":"2026-11-10","title":"灾难与急救","kind":"实验","location":"北苑2804","teacher":"赵庆忠 / 韩振","week":8,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-108","date":"2026-11-10","title":"预防医学","kind":"实验","location":"北苑2810","teacher":"高静","week":8,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-109","date":"2026-11-11","title":"毛泽东思想和中国特色社会主义理论体系概论","kind":"理论","location":"南苑W103","teacher":"马小红","week":8,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-110","date":"2026-11-11","title":"临床技能学(1)","kind":"实验","location":"南苑1号楼1层健康互动实践室","teacher":"李豆豆,吴冶君,沈昱仁,杜望春","week":8,"sections":"5-8节","startMinute":780,"endMinute":970,"conflict":false},{"id":"course-111","date":"2026-11-12","title":"习近平新时代中国特色社会主义思想概论","kind":"理论","location":"北苑2804","teacher":"张学娟","week":8,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-112","date":"2026-11-12","title":"毛泽东思想和中国特色社会主义理论体系概论","kind":"理论","location":"北苑2804","teacher":"马小红","week":8,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-113","date":"2026-11-12","title":"医学伦理学","kind":"理论","location":"北苑2804","teacher":"严育忠","week":8,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-114","date":"2026-11-12","title":"预防医学","kind":"理论","location":"北苑2807","teacher":"王文朋","week":8,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-115","date":"2026-11-13","title":"医学遗传学A1","kind":"理论","location":"北苑2804","teacher":"崔春红","week":8,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-116","date":"2026-11-13","title":"流行病学","kind":"理论","location":"北苑2804","teacher":"高静","week":8,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-117","date":"2026-11-16","title":"流行病学","kind":"实验","location":"南苑7号楼第二机房（3楼）","teacher":"赵苗苗,吴冠林","week":9,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-118","date":"2026-11-16","title":"医学心理学","kind":"理论","location":"北苑2804","teacher":"沈文超","week":9,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-119","date":"2026-11-16","title":"外科学总论","kind":"理论","location":"北苑2804","teacher":"许东伟","week":9,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-120","date":"2026-11-16","title":"外科学总论","kind":"理论","location":"北苑2804","teacher":"何永刚","week":9,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-121","date":"2026-11-17","title":"诊断学综合I","kind":"实验","location":"北苑7305 / 北苑7309 / 北苑7408 / 北苑7201","teacher":"杜望春,李豆豆,吴冶君,吴冠林","week":9,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-122","date":"2026-11-17","title":"全科医学概论","kind":"理论","location":"北苑2804","teacher":"索丽霞","week":9,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-123","date":"2026-11-17","title":"预防医学","kind":"理论","location":"北苑2810","teacher":"王文朋","week":9,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-124","date":"2026-11-18","title":"习近平新时代中国特色社会主义思想概论","kind":"实验","location":"校外场地","teacher":"张学娟","week":9,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-125","date":"2026-11-18","title":"外科学总论","kind":"实验","location":"实验动物中心105","teacher":"吴冠林,李加才 / 刘玉伶 / 张雨萍,陈甜甜 / 张淑颖 / 吕一峰 / 朱海燕 / 王炜","week":9,"sections":"5-8节","startMinute":780,"endMinute":970,"conflict":false},{"id":"course-126","date":"2026-11-19","title":"习近平新时代中国特色社会主义思想概论","kind":"理论","location":"北苑2804","teacher":"张学娟","week":9,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-127","date":"2026-11-19","title":"毛泽东思想和中国特色社会主义理论体系概论","kind":"理论","location":"北苑2804","teacher":"马小红","week":9,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-128","date":"2026-11-19","title":"医学伦理学","kind":"理论","location":"北苑2804","teacher":"涂平安","week":9,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-129","date":"2026-11-19","title":"职业生涯规划与就业指导(3)","kind":"理论","location":"北苑2807","teacher":"杜望春","week":9,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-130","date":"2026-11-20","title":"医学遗传学A1","kind":"理论","location":"北苑2804","teacher":"崔春红","week":9,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-131","date":"2026-11-20","title":"流行病学","kind":"理论","location":"北苑2804","teacher":"高静","week":9,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-132","date":"2026-11-23","title":"流行病学","kind":"实验","location":"南苑7号楼第二机房（3楼）","teacher":"赵苗苗,吴冠林","week":10,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-133","date":"2026-11-23","title":"医学心理学","kind":"理论","location":"北苑2804","teacher":"沈文超","week":10,"sections":"3节","startMinute":600,"endMinute":640,"conflict":false},{"id":"course-134","date":"2026-11-23","title":"医学心理学","kind":"实验","location":"北苑2804","teacher":"沈文超","week":10,"sections":"4节","startMinute":650,"endMinute":690,"conflict":false},{"id":"course-135","date":"2026-11-23","title":"外科学总论","kind":"理论","location":"北苑2804","teacher":"徐继","week":10,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-136","date":"2026-11-23","title":"外科学总论","kind":"理论","location":"北苑2804","teacher":"何永刚","week":10,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-137","date":"2026-11-24","title":"诊断学综合I","kind":"理论","location":"北苑2610","teacher":"郭兆娇","week":10,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-138","date":"2026-11-24","title":"毛泽东思想和中国特色社会主义理论体系概论","kind":"实验","location":"校外场地","teacher":"马小红","week":10,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-139","date":"2026-11-24","title":"全科医学概论","kind":"理论","location":"北苑2804","teacher":"尚东亚","week":10,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-140","date":"2026-11-24","title":"预防医学","kind":"实验","location":"北苑2810","teacher":"高静","week":10,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-141","date":"2026-11-25","title":"预防医学","kind":"理论","location":"北苑2804","teacher":"王文朋","week":10,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-142","date":"2026-11-25","title":"临床技能学(1)","kind":"实验","location":"南苑1号楼1层健康互动实践室","teacher":"李豆豆,吴冶君,沈昱仁,杜望春","week":10,"sections":"5-8节","startMinute":780,"endMinute":970,"conflict":false},{"id":"course-143","date":"2026-11-26","title":"习近平新时代中国特色社会主义思想概论","kind":"理论","location":"北苑2804","teacher":"张学娟","week":10,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-144","date":"2026-11-26","title":"毛泽东思想和中国特色社会主义理论体系概论","kind":"理论","location":"北苑2804","teacher":"马小红","week":10,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-145","date":"2026-11-27","title":"医学遗传学A1","kind":"理论","location":"北苑2804","teacher":"崔春红","week":10,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-146","date":"2026-11-27","title":"流行病学","kind":"理论","location":"北苑2804","teacher":"高静","week":10,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-147","date":"2026-11-30","title":"流行病学","kind":"理论","location":"北苑2804","teacher":"高静","week":11,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-148","date":"2026-11-30","title":"医学心理学","kind":"理论","location":"北苑2804","teacher":"田建超","week":11,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-149","date":"2026-11-30","title":"外科学总论","kind":"理论","location":"北苑2804","teacher":"龚华","week":11,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-150","date":"2026-11-30","title":"外科学总论","kind":"理论","location":"北苑2804","teacher":"何永刚","week":11,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-151","date":"2026-12-01","title":"诊断学综合I","kind":"实验","location":"北苑7305 / 北苑7408 / 北苑7309 / 北苑7201","teacher":"杜望春,吴冶君,吴冠林,宋荣华,李豆豆","week":11,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-152","date":"2026-12-01","title":"全科医学概论","kind":"理论","location":"北苑2804","teacher":"赵瑾","week":11,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-153","date":"2026-12-01","title":"预防医学","kind":"理论","location":"北苑2810","teacher":"王文朋","week":11,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-154","date":"2026-12-02","title":"习近平新时代中国特色社会主义思想概论","kind":"实验","location":"校外场地","teacher":"张学娟","week":11,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-155","date":"2026-12-02","title":"外科学总论","kind":"实验","location":"实验动物中心105","teacher":"张雨萍,陈甜甜 / 张淑颖 / 朱海燕 / 王炜 / 韩楠","week":11,"sections":"5-8节","startMinute":780,"endMinute":970,"conflict":false},{"id":"course-156","date":"2026-12-03","title":"习近平新时代中国特色社会主义思想概论","kind":"理论","location":"北苑2804","teacher":"张学娟","week":11,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-157","date":"2026-12-03","title":"毛泽东思想和中国特色社会主义理论体系概论","kind":"理论","location":"北苑2804","teacher":"马小红","week":11,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-158","date":"2026-12-04","title":"医学遗传学A1","kind":"理论","location":"北苑2804","teacher":"崔春红","week":11,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-159","date":"2026-12-04","title":"流行病学","kind":"理论","location":"北苑2804","teacher":"赵苗苗","week":11,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-160","date":"2026-12-07","title":"流行病学","kind":"理论","location":"北苑2804","teacher":"赵苗苗","week":12,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-161","date":"2026-12-07","title":"医学心理学","kind":"理论","location":"北苑2804","teacher":"陈真真","week":12,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-162","date":"2026-12-08","title":"诊断学综合I","kind":"理论","location":"北苑2610","teacher":"张进安","week":12,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-163","date":"2026-12-08","title":"全科医学概论","kind":"理论","location":"北苑2804","teacher":"沈艺","week":12,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-164","date":"2026-12-08","title":"预防医学","kind":"实验","location":"北苑2810","teacher":"高静","week":12,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-165","date":"2026-12-09","title":"预防医学","kind":"理论","location":"北苑2804","teacher":"李豆豆","week":12,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-166","date":"2026-12-09","title":"临床技能学(1)","kind":"实验","location":"南苑1号楼1层健康互动实践室","teacher":"李豆豆,吴冶君,沈昱仁,杜望春","week":12,"sections":"5-8节","startMinute":780,"endMinute":970,"conflict":false},{"id":"course-167","date":"2026-12-10","title":"习近平新时代中国特色社会主义思想概论","kind":"理论","location":"北苑2804","teacher":"张学娟","week":12,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-168","date":"2026-12-10","title":"毛泽东思想和中国特色社会主义理论体系概论","kind":"理论","location":"北苑2804","teacher":"马小红","week":12,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-169","date":"2026-12-11","title":"医学遗传学A1","kind":"理论","location":"北苑2804","teacher":"崔春红","week":12,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-170","date":"2026-12-11","title":"流行病学","kind":"理论","location":"北苑2804","teacher":"赵苗苗","week":12,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-171","date":"2026-12-14","title":"流行病学","kind":"理论","location":"北苑2804","teacher":"赵苗苗","week":13,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-172","date":"2026-12-14","title":"医学心理学","kind":"理论","location":"北苑2804","teacher":"张凤珠","week":13,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-173","date":"2026-12-15","title":"诊断学综合I","kind":"理论","location":"北苑2610","teacher":"胡刘平","week":13,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-174","date":"2026-12-15","title":"全科医学概论","kind":"理论","location":"北苑2804","teacher":"陈德宣","week":13,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-175","date":"2026-12-15","title":"预防医学","kind":"理论","location":"北苑2810","teacher":"高静","week":13,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-176","date":"2026-12-16","title":"外科学总论","kind":"实验","location":"实验动物中心105","teacher":"张雨萍,陈甜甜 / 张淑颖 / 吕一峰 / 朱海燕 / 刘婷婷","week":13,"sections":"5-8节","startMinute":780,"endMinute":970,"conflict":false},{"id":"course-177","date":"2026-12-17","title":"习近平新时代中国特色社会主义思想概论","kind":"理论","location":"北苑2804","teacher":"张学娟","week":13,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-178","date":"2026-12-17","title":"毛泽东思想和中国特色社会主义理论体系概论","kind":"理论","location":"北苑2804","teacher":"马小红","week":13,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-179","date":"2026-12-18","title":"医学遗传学A1","kind":"实验","location":"显微互动实验室4(北苑4307)","teacher":"王辉","week":13,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-180","date":"2026-12-18","title":"流行病学","kind":"实验","location":"校外实训2（临床）","teacher":"赵苗苗,吴冠林","week":13,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-181","date":"2026-12-21","title":"流行病学","kind":"实验","location":"校外实训2（临床）","teacher":"赵苗苗,吴冠林","week":14,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-182","date":"2026-12-21","title":"医学心理学","kind":"理论","location":"北苑2804","teacher":"郑琰婷","week":14,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-183","date":"2026-12-22","title":"诊断学综合I","kind":"理论","location":"北苑2610","teacher":"张进安","week":14,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-184","date":"2026-12-22","title":"全科医学概论","kind":"理论","location":"北苑2804","teacher":"侯月梅","week":14,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-185","date":"2026-12-22","title":"预防医学","kind":"理论","location":"北苑2810","teacher":"高静","week":14,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-186","date":"2026-12-23","title":"预防医学","kind":"理论","location":"北苑2804","teacher":"王欣国","week":14,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-187","date":"2026-12-23","title":"临床技能学(1)","kind":"实验","location":"南苑1号楼1层健康互动实践室","teacher":"李豆豆,吴冶君,沈昱仁,杜望春","week":14,"sections":"5-8节","startMinute":780,"endMinute":970,"conflict":false},{"id":"course-188","date":"2026-12-24","title":"习近平新时代中国特色社会主义思想概论","kind":"理论","location":"北苑2804","teacher":"张学娟","week":14,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-189","date":"2026-12-24","title":"毛泽东思想和中国特色社会主义理论体系概论","kind":"理论","location":"北苑2804","teacher":"马小红","week":14,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-190","date":"2026-12-24","title":"职业生涯规划与就业指导(3)","kind":"实验","location":"北苑2807","teacher":"杜望春,贾一丹","week":14,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-191","date":"2026-12-25","title":"医学遗传学A1","kind":"实验","location":"北苑4号楼4509","teacher":"王辉","week":14,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-192","date":"2026-12-25","title":"流行病学","kind":"实验","location":"校外实训2（临床）","teacher":"赵苗苗,吴冠林","week":14,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-193","date":"2026-12-28","title":"流行病学","kind":"实验","location":"校外实训2（临床）","teacher":"赵苗苗,吴冠林","week":15,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-194","date":"2026-12-28","title":"医学心理学","kind":"理论","location":"北苑2804","teacher":"郑琰婷","week":15,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-195","date":"2026-12-29","title":"诊断学综合I","kind":"理论","location":"北苑2610","teacher":"杜玉珍","week":15,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-196","date":"2026-12-29","title":"全科医学概论","kind":"实验","location":"北苑2804","teacher":"陈晓鸥","week":15,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-197","date":"2026-12-29","title":"预防医学","kind":"理论","location":"北苑2810","teacher":"张浩","week":15,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-198","date":"2026-12-31","title":"习近平新时代中国特色社会主义思想概论","kind":"理论","location":"北苑2804","teacher":"张学娟","week":15,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-199","date":"2026-12-31","title":"毛泽东思想和中国特色社会主义理论体系概论","kind":"理论","location":"北苑2804","teacher":"马小红","week":15,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-200","date":"2027-01-01","title":"医学遗传学A1","kind":"实验","location":"北苑4号楼4509","teacher":"王辉","week":15,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-201","date":"2027-01-01","title":"流行病学","kind":"实验","location":"校外实训2（临床）","teacher":"赵苗苗,吴冠林","week":15,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-202","date":"2027-01-04","title":"流行病学","kind":"实验","location":"校外实训2（临床）","teacher":"赵苗苗,吴冠林","week":16,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-203","date":"2027-01-04","title":"医学心理学","kind":"实验","location":"北苑2804","teacher":"郑琰婷","week":16,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-204","date":"2027-01-05","title":"诊断学综合I","kind":"理论","location":"北苑2610","teacher":"李妮娅","week":16,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-205","date":"2027-01-05","title":"全科医学概论","kind":"实验","location":"北苑2804","teacher":"毛智荣","week":16,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false},{"id":"course-206","date":"2027-01-05","title":"预防医学","kind":"实验","location":"南苑1号楼1层健康互动实践室","teacher":"李晨蕾,张浩","week":16,"sections":"7-8节","startMinute":890,"endMinute":970,"conflict":false},{"id":"course-207","date":"2027-01-06","title":"预防医学","kind":"实验","location":"南苑1号楼1层健康互动实践室","teacher":"李晨蕾,张浩","week":16,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-208","date":"2027-01-07","title":"习近平新时代中国特色社会主义思想概论","kind":"理论","location":"北苑2804","teacher":"张学娟","week":16,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-209","date":"2027-01-07","title":"毛泽东思想和中国特色社会主义理论体系概论","kind":"理论","location":"北苑2804","teacher":"马小红","week":16,"sections":"3-4节","startMinute":600,"endMinute":690,"conflict":false},{"id":"course-210","date":"2027-01-08","title":"医学遗传学A1","kind":"实验","location":"动物机能实验室1-右(北苑4203)","teacher":"王辉","week":16,"sections":"1-2节","startMinute":480,"endMinute":570,"conflict":false},{"id":"course-211","date":"2027-01-08","title":"流行病学","kind":"实验","location":"北苑2804","teacher":"赵苗苗,吴冠林","week":16,"sections":"5-6节","startMinute":780,"endMinute":860,"conflict":false}];
+  var CONFIG = window.__PLANNER_CONFIG__ || {};
+  var CLOUD_ENABLED = Boolean(CONFIG.supabaseUrl && CONFIG.supabaseAnonKey && CONFIG.mode !== "local");
+  var STORAGE_PREFIX = "yuki-dayflow-sync-v1";
+  var LEGACY_STORAGE_KEY = "yuki-dayflow-standalone-v1";
+  var LEGACY_MIGRATION_KEY = "yuki-dayflow-legacy-migrated-v1";
+  var AUTH_STORAGE_KEY = "yuki-dayflow-auth-v1";
+  var HOUR_HEIGHT = 64;
+  var CATEGORY_OPTIONS = ["医学", "英语", "工科 / 机器人", "论文", "生活"];
+  var DEFAULT_HABITS = ["英语输入", "工科 / 机器人", "运动或步行", "睡前复盘"];
+
+  var app = document.getElementById("app");
+  var toastElement = document.getElementById("toast");
+  var importFile = document.getElementById("importFile");
+  var taskDialog = document.getElementById("taskDialog");
+  var goalDialog = document.getElementById("goalDialog");
+  var itemDialog = document.getElementById("itemDialog");
+  var taskForm = document.getElementById("taskForm");
+  var goalForm = document.getElementById("goalForm");
+  var itemForm = document.getElementById("itemForm");
+  var toastTimer = null;
+  var syncTimer = null;
+  var syncPromise = null;
+  var syncQueued = false;
+  var refreshPromise = null;
+  var authMode = "login";
+  var authSession = CLOUD_ENABLED ? loadAuthSession() : null;
+
+  var ui = {
+    view: "day",
+    selectedDate: todayShanghai(),
+    taskFilter: "open",
+    taskSearch: "",
+    timelineScrollTop: null,
+    taskEditingId: null,
+    goalEditingId: null,
+    itemGoalId: null,
+    itemEditingId: null
+  };
+
+  var state = loadState();
+  bootstrap();
+
+  function defaultState() {
+    return {
+      version: 1,
+      tasks: [],
+      habits: DEFAULT_HABITS.map(function (title, index) {
+        return { id: "habit-" + (index + 1), title: title, sortOrder: index };
+      }),
+      habitChecks: {},
+      reflections: {},
+      goals: [],
+      meta: { updatedAt: "" }
+    };
+  }
+
+  function normalizeState(value) {
+    var fallback = defaultState();
+    if (!value || typeof value !== "object") return fallback;
+    return {
+      version: 1,
+      tasks: Array.isArray(value.tasks) ? value.tasks : [],
+      habits: Array.isArray(value.habits) && value.habits.length ? value.habits : fallback.habits,
+      habitChecks: value.habitChecks && typeof value.habitChecks === "object" ? value.habitChecks : {},
+      reflections: value.reflections && typeof value.reflections === "object" ? value.reflections : {},
+      goals: Array.isArray(value.goals) ? value.goals.map(function (goal) {
+        return Object.assign({}, goal, { items: Array.isArray(goal.items) ? goal.items : [] });
+      }) : [],
+      meta: value.meta && typeof value.meta === "object"
+        ? { updatedAt: typeof value.meta.updatedAt === "string" ? value.meta.updatedAt : "" }
+        : { updatedAt: "" }
+    };
+  }
+
+  function currentUserId() {
+    return authSession && authSession.user && authSession.user.id ? authSession.user.id : null;
+  }
+
+  function currentStorageKey() {
+    return STORAGE_PREFIX + ":" + (currentUserId() || "local");
+  }
+
+  function loadState() {
+    try {
+      var stored = localStorage.getItem(currentStorageKey());
+      if (stored) return normalizeState(JSON.parse(stored));
+
+      var canMigrate = !CLOUD_ENABLED || (currentUserId() && !localStorage.getItem(LEGACY_MIGRATION_KEY));
+      var legacy = canMigrate ? localStorage.getItem(LEGACY_STORAGE_KEY) : null;
+      if (legacy) {
+        var migrated = normalizeState(JSON.parse(legacy));
+        migrated.meta.updatedAt = new Date().toISOString();
+        localStorage.setItem(currentStorageKey(), JSON.stringify(migrated));
+        if (CLOUD_ENABLED) localStorage.setItem(LEGACY_MIGRATION_KEY, currentUserId());
+        return migrated;
+      }
+      return defaultState();
+    } catch (error) {
+      return defaultState();
+    }
+  }
+
+  function persistState() {
+    try {
+      localStorage.setItem(currentStorageKey(), JSON.stringify(state));
+      return true;
+    } catch (error) {
+      showToast("保存失败，请先导出备份并清理浏览器空间");
+      return false;
+    }
+  }
+
+  function saveState(message) {
+    state.meta = state.meta || {};
+    state.meta.updatedAt = new Date().toISOString();
+    var saved = persistState();
+    if (message) showToast(message);
+    if (saved && CLOUD_ENABLED && authSession) scheduleSync();
+    return saved;
+  }
+
+  function loadAuthSession() {
+    try {
+      var stored = localStorage.getItem(AUTH_STORAGE_KEY);
+      var parsed = stored ? JSON.parse(stored) : null;
+      return parsed && parsed.access_token && parsed.refresh_token ? parsed : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function normalizeSession(payload) {
+    var source = payload && payload.session ? payload.session : payload;
+    if (!source || !source.access_token || !source.refresh_token) return null;
+    var expiresAt = Number(source.expires_at || 0);
+    if (!expiresAt && source.expires_in) expiresAt = Math.floor(Date.now() / 1000) + Number(source.expires_in);
+    return {
+      access_token: source.access_token,
+      refresh_token: source.refresh_token,
+      expires_at: expiresAt,
+      user: source.user || (payload && payload.user) || null
+    };
+  }
+
+  function setAuthSession(payload) {
+    var next = normalizeSession(payload);
+    if (!next) return false;
+    authSession = next;
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authSession));
+    return true;
+  }
+
+  function clearAuthSession() {
+    authSession = null;
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+  }
+
+  function setSyncStatus(message, tone) {
+    var element = document.getElementById("syncStatus");
+    if (!element) return;
+    element.hidden = false;
+    element.textContent = message;
+    element.className = "sync-chip" + (tone ? " " + tone : "");
+  }
+
+  function formatSyncTime() {
+    try {
+      return new Intl.DateTimeFormat("zh-CN", {
+        timeZone: "Asia/Shanghai",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23"
+      }).format(new Date());
+    } catch (error) {
+      return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+  }
+
+  function friendlyAuthError(error) {
+    var message = String(error && error.message ? error.message : error || "");
+    if (/invalid login credentials/i.test(message)) return "邮箱或密码不正确";
+    if (/email not confirmed/i.test(message)) return "请先打开确认邮件，再回来登录";
+    if (/user already registered/i.test(message)) return "这个邮箱已经注册，可以直接登录";
+    if (/password.*characters/i.test(message) || /weak password/i.test(message)) return "密码强度不足，请至少使用 8 位字符";
+    if (/rate limit/i.test(message)) return "操作过于频繁，请稍后再试";
+    if (/failed to fetch|network/i.test(message)) return "网络连接失败，请检查网络后重试";
+    return message || "操作失败，请稍后重试";
+  }
+
+  async function parseResponse(response) {
+    var text = await response.text();
+    var data = null;
+    if (text) {
+      try { data = JSON.parse(text); }
+      catch (error) { data = { message: text }; }
+    }
+    if (!response.ok) {
+      var message = data && (data.msg || data.message || data.error_description || data.error);
+      throw new Error(message || "请求失败（" + response.status + "）");
+    }
+    return data;
+  }
+
+  async function authRequest(path, body, accessToken) {
+    var headers = {
+      apikey: CONFIG.supabaseAnonKey,
+      "Content-Type": "application/json"
+    };
+    if (accessToken) headers.Authorization = "Bearer " + accessToken;
+    var response = await fetch(String(CONFIG.supabaseUrl).replace(/\/$/, "") + "/auth/v1/" + path, {
+      method: "POST",
+      headers: headers,
+      body: body ? JSON.stringify(body) : undefined
+    });
+    return parseResponse(response);
+  }
+
+  async function fetchAuthUser(accessToken) {
+    var response = await fetch(String(CONFIG.supabaseUrl).replace(/\/$/, "") + "/auth/v1/user", {
+      headers: {
+        apikey: CONFIG.supabaseAnonKey,
+        Authorization: "Bearer " + accessToken
+      }
+    });
+    return parseResponse(response);
+  }
+
+  function takeAuthCallback() {
+    if (!window.location.hash || window.location.hash.length < 2) return null;
+    var params = new URLSearchParams(window.location.hash.slice(1));
+    var error = params.get("error_description") || params.get("error");
+    var accessToken = params.get("access_token");
+    var refreshToken = params.get("refresh_token");
+    if (!error && (!accessToken || !refreshToken)) return null;
+    if (window.history && typeof window.history.replaceState === "function") {
+      window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+    }
+    if (error) return { error: error };
+    return {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      expires_in: Number(params.get("expires_in") || 3600)
+    };
+  }
+
+  async function refreshSession() {
+    if (!authSession || !authSession.refresh_token) throw new Error("登录已失效");
+    if (refreshPromise) return refreshPromise;
+    refreshPromise = authRequest("token?grant_type=refresh_token", {
+      refresh_token: authSession.refresh_token
+    }).then(function (payload) {
+      if (!setAuthSession(payload)) throw new Error("登录已失效");
+      return authSession;
+    }).finally(function () {
+      refreshPromise = null;
+    });
+    return refreshPromise;
+  }
+
+  async function ensureSession() {
+    if (!authSession) throw new Error("请先登录");
+    var expiresAtMs = Number(authSession.expires_at || 0) * 1000;
+    if (!expiresAtMs || expiresAtMs - Date.now() < 60000) await refreshSession();
+    return authSession;
+  }
+
+  async function apiRequest(path, options, mayRetry) {
+    await ensureSession();
+    var request = options || {};
+    var headers = Object.assign({
+      apikey: CONFIG.supabaseAnonKey,
+      Authorization: "Bearer " + authSession.access_token
+    }, request.headers || {});
+    var response;
+    try {
+      response = await fetch(String(CONFIG.supabaseUrl).replace(/\/$/, "") + "/rest/v1/" + path, {
+        method: request.method || "GET",
+        headers: headers,
+        body: request.body
+      });
+    } catch (error) {
+      throw new Error("网络连接失败");
+    }
+    if (response.status === 401 && mayRetry !== false) {
+      await refreshSession();
+      return apiRequest(path, options, false);
+    }
+    return parseResponse(response);
+  }
+
+  function timestampOf(value) {
+    var timestamp = Date.parse(value || "");
+    return Number.isFinite(timestamp) ? timestamp : 0;
+  }
+
+  async function fetchCloudState() {
+    var userId = currentUserId();
+    var rows = await apiRequest(
+      "planner_snapshots?select=data,updated_at&user_id=eq." + encodeURIComponent(userId) + "&limit=1",
+      { headers: { Accept: "application/json" } }
+    );
+    return Array.isArray(rows) && rows.length ? rows[0] : null;
+  }
+
+  async function pushCloudState() {
+    var payload = {
+      user_id: currentUserId(),
+      data: state
+    };
+    await apiRequest("planner_snapshots?on_conflict=user_id", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates,return=minimal"
+      },
+      body: JSON.stringify(payload)
+    });
+  }
+
+  function scheduleSync() {
+    window.clearTimeout(syncTimer);
+    if (!navigator.onLine) {
+      setSyncStatus("离线，稍后同步", "offline");
+      return;
+    }
+    setSyncStatus("等待同步…", "syncing");
+    syncTimer = window.setTimeout(function () { syncNow(); }, 900);
+  }
+
+  async function syncNow(options) {
+    options = options || {};
+    if (!CLOUD_ENABLED || !authSession) return;
+    if (!navigator.onLine) {
+      setSyncStatus("离线，稍后同步", "offline");
+      return;
+    }
+    if (syncPromise) {
+      syncQueued = true;
+      return syncPromise;
+    }
+    syncPromise = (async function () {
+      setSyncStatus("正在同步…", "syncing");
+      var row = await fetchCloudState();
+      if (!row) {
+        await pushCloudState();
+      } else {
+        var cloudState = normalizeState(row.data);
+        var cloudTimestamp = timestampOf(cloudState.meta.updatedAt || row.updated_at);
+        var localTimestamp = timestampOf(state.meta && state.meta.updatedAt);
+        if (cloudTimestamp > localTimestamp) {
+          state = cloudState;
+          persistState();
+          render();
+          if (!options.silent) showToast("已加载另一台设备上的新内容");
+        } else if (localTimestamp > cloudTimestamp) {
+          await pushCloudState();
+        }
+      }
+      setSyncStatus("已同步 " + formatSyncTime(), "synced");
+    })().catch(function (error) {
+      if (/登录已失效|invalid refresh token|refresh token/i.test(String(error && error.message))) {
+        clearAuthSession();
+        renderAuth("登录已失效，请重新登录");
+      } else {
+        setSyncStatus("同步失败，稍后重试", "error");
+        if (!options.silent) showToast(friendlyAuthError(error));
+      }
+    }).finally(function () {
+      syncPromise = null;
+      if (syncQueued) {
+        syncQueued = false;
+        window.setTimeout(function () { syncNow({ silent: true }); }, 150);
+      }
+    });
+    return syncPromise;
+  }
+
+  function renderAuth(message) {
+    document.body.classList.add("auth-mode");
+    var logoutButton = document.getElementById("logoutButton");
+    if (logoutButton) logoutButton.hidden = true;
+    setSyncStatus("等待登录", "");
+    var isSignup = authMode === "signup";
+    app.innerHTML = '<section class="auth-shell"><form id="authForm" class="auth-card">' +
+      '<div class="auth-hero"><h2>' + (isSignup ? "创建同步账号" : "登录你的规划页") + '</h2>' +
+      '<p>课程、任务、习惯、感悟与目标进度会在你的设备之间同步。</p></div>' +
+      '<div class="auth-body"><label class="field-label">邮箱' +
+      '<input id="authEmail" class="field" type="email" required autocomplete="email" placeholder="name@example.com"></label>' +
+      '<label class="field-label">密码<input id="authPassword" class="field" type="password" required minlength="8" ' +
+      'autocomplete="' + (isSignup ? "new-password" : "current-password") + '" placeholder="至少 8 位字符"></label>' +
+      (isSignup ? '<div class="auth-note">注册后可能需要先在邮箱里确认账号，再回来登录。</div>' : '') +
+      '<div id="authError" class="auth-error" role="alert">' + escapeHtml(message || "") + '</div>' +
+      '<button id="authSubmit" class="button primary" type="submit">' + (isSignup ? "创建账号" : "登录并同步") + '</button>' +
+      '<button class="button ghost" type="button" data-action="toggle-auth-mode">' +
+      (isSignup ? "已有账号？返回登录" : "第一次使用？创建账号") + '</button>' +
+      '<div class="auth-note">每个账号只能读取自己的数据；本机仍会保留离线副本。</div>' +
+      '</div></form></section>';
+  }
+
+  async function enterApp(payload) {
+    if (!setAuthSession(payload)) throw new Error("登录响应无效");
+    state = loadState();
+    render();
+    await syncNow({ silent: true });
+  }
+
+  async function handleAuthSubmit(form) {
+    var email = document.getElementById("authEmail").value.trim();
+    var password = document.getElementById("authPassword").value;
+    var submit = document.getElementById("authSubmit");
+    var errorElement = document.getElementById("authError");
+    submit.disabled = true;
+    submit.textContent = authMode === "signup" ? "正在创建…" : "正在登录…";
+    errorElement.textContent = "";
+    try {
+      if (authMode === "signup") {
+        var signupPayload = await authRequest(
+          "signup?redirect_to=" + encodeURIComponent(window.location.origin + window.location.pathname),
+          { email: email, password: password }
+        );
+        if (normalizeSession(signupPayload)) {
+          await enterApp(signupPayload);
+        } else {
+          authMode = "login";
+          renderAuth("账号已创建。请先查收确认邮件，然后登录。");
+        }
+      } else {
+        var loginPayload = await authRequest("token?grant_type=password", { email: email, password: password });
+        await enterApp(loginPayload);
+      }
+    } catch (error) {
+      errorElement = document.getElementById("authError");
+      if (errorElement) errorElement.textContent = friendlyAuthError(error);
+      submit = document.getElementById("authSubmit");
+      if (submit) {
+        submit.disabled = false;
+        submit.textContent = authMode === "signup" ? "创建账号" : "登录并同步";
+      }
+    }
+  }
+
+  async function handleLogout() {
+    window.clearTimeout(syncTimer);
+    if (authSession) {
+      try {
+        await syncNow({ silent: true });
+        await authRequest("logout", null, authSession.access_token);
+      } catch (error) {}
+    }
+    clearAuthSession();
+    state = defaultState();
+    authMode = "login";
+    renderAuth();
+  }
+
+  async function bootstrap() {
+    if (!CLOUD_ENABLED) {
+      render();
+      setSyncStatus("本机测试", "synced");
+      return;
+    }
+    var callbackSession = takeAuthCallback();
+    if (callbackSession && callbackSession.error) {
+      clearAuthSession();
+      renderAuth(friendlyAuthError(callbackSession.error));
+      return;
+    }
+    if (callbackSession) {
+      try {
+        callbackSession.user = await fetchAuthUser(callbackSession.access_token);
+        await enterApp(callbackSession);
+        showToast("邮箱已确认，账号同步已开启");
+        return;
+      } catch (error) {
+        clearAuthSession();
+        renderAuth(friendlyAuthError(error));
+        return;
+      }
+    }
+    if (!authSession) {
+      renderAuth();
+      return;
+    }
+    try {
+      await ensureSession();
+      state = loadState();
+      render();
+      await syncNow({ silent: true });
+    } catch (error) {
+      clearAuthSession();
+      state = defaultState();
+      renderAuth("登录已失效，请重新登录");
+    }
+  }
+
+  function uid(prefix) {
+    if (window.crypto && typeof window.crypto.randomUUID === "function") {
+      return prefix + "-" + window.crypto.randomUUID();
+    }
+    return prefix + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2);
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (char) {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char];
+    });
+  }
+
+  function escapeAttr(value) {
+    return escapeHtml(value);
+  }
+
+  function showToast(message) {
+    window.clearTimeout(toastTimer);
+    toastElement.textContent = message;
+    toastElement.classList.add("show");
+    toastTimer = window.setTimeout(function () {
+      toastElement.classList.remove("show");
+    }, 2400);
+  }
+
+  function parseDate(date) {
+    return new Date(date + "T12:00:00Z");
+  }
+
+  function toDateString(date) {
+    return date.toISOString().slice(0, 10);
+  }
+
+  function addDays(date, amount) {
+    var next = parseDate(date);
+    next.setUTCDate(next.getUTCDate() + amount);
+    return toDateString(next);
+  }
+
+  function todayShanghai() {
+    try {
+      var parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Shanghai",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).formatToParts(new Date());
+      var map = {};
+      parts.forEach(function (part) { map[part.type] = part.value; });
+      return map.year + "-" + map.month + "-" + map.day;
+    } catch (error) {
+      return new Date().toISOString().slice(0, 10);
+    }
+  }
+
+  function currentShanghaiMinute() {
+    try {
+      var parts = new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Asia/Shanghai",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23"
+      }).formatToParts(new Date());
+      var map = {};
+      parts.forEach(function (part) { map[part.type] = part.value; });
+      return Number(map.hour) * 60 + Number(map.minute);
+    } catch (error) {
+      var now = new Date();
+      return now.getHours() * 60 + now.getMinutes();
+    }
+  }
+
+  function weekdayIndex(date) {
+    return parseDate(date).getUTCDay();
+  }
+
+  function weekdayName(date, short) {
+    var names = short
+      ? ["周日", "周一", "周二", "周三", "周四", "周五", "周六"]
+      : ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+    return names[weekdayIndex(date)];
+  }
+
+  function formatDate(date) {
+    var parts = date.split("-");
+    return Number(parts[1]) + "月" + Number(parts[2]) + "日";
+  }
+
+  function fullDate(date) {
+    var parts = date.split("-");
+    return parts[0] + "年" + Number(parts[1]) + "月" + Number(parts[2]) + "日";
+  }
+
+  function mondayOf(date) {
+    var day = weekdayIndex(date);
+    var offset = day === 0 ? -6 : 1 - day;
+    return addDays(date, offset);
+  }
+
+  function weekDates(date) {
+    var monday = mondayOf(date);
+    return Array.from({ length: 7 }, function (_, index) {
+      return addDays(monday, index);
+    });
+  }
+
+  function minuteLabel(minute) {
+    var hour = Math.floor(minute / 60);
+    var rest = minute % 60;
+    return String(hour).padStart(2, "0") + ":" + String(rest).padStart(2, "0");
+  }
+
+  function inputToMinute(value) {
+    if (!value) return null;
+    var pieces = value.split(":");
+    return Number(pieces[0]) * 60 + Number(pieces[1]);
+  }
+
+  function compactNumber(value) {
+    var number = Number(value || 0);
+    return Number.isInteger(number) ? String(number) : number.toFixed(1);
+  }
+
+  function courseEventsFor(date) {
+    return COURSE_EVENTS.filter(function (event) { return event.date === date; });
+  }
+
+  function dayTasks(date) {
+    return state.tasks
+      .filter(function (task) { return task.taskDate === date; })
+      .sort(function (a, b) {
+        return Number(a.completed) - Number(b.completed) ||
+          (a.startMinute == null ? 9999 : a.startMinute) - (b.startMinute == null ? 9999 : b.startMinute) ||
+          String(a.createdAt).localeCompare(String(b.createdAt));
+      });
+  }
+
+  function goalProgress(goal) {
+    var items = Array.isArray(goal.items) ? goal.items : [];
+    var weightTotal = items.reduce(function (sum, item) {
+      return sum + Math.max(0, Number(item.weight || 0));
+    }, 0);
+    var weightedDone = items.reduce(function (sum, item) {
+      var target = Math.max(0.0001, Number(item.targetCount || 0));
+      var ratio = Math.max(0, Math.min(1, Number(item.completedCount || 0) / target));
+      return sum + Math.max(0, Number(item.weight || 0)) * ratio;
+    }, 0);
+    return weightTotal > 0 ? Math.round(weightedDone / weightTotal * 100) : 0;
+  }
+
+  function taskTone(category) {
+    if (category === "医学") return "task-med";
+    if (category === "英语") return "task-eng";
+    if (category === "工科 / 机器人") return "task-tech";
+    if (category === "论文") return "task-paper";
+    return "task-life";
+  }
+
+  function categoryBadge(category) {
+    if (category === "医学") return "violet";
+    if (category === "英语") return "amber";
+    if (category === "工科 / 机器人") return "blue";
+    if (category === "生活") return "green";
+    return "";
+  }
+
+  function positionEvents(events) {
+    var sorted = events.slice().sort(function (a, b) {
+      return a.startMinute - b.startMinute || b.endMinute - a.endMinute;
+    });
+    var result = [];
+    var cursor = 0;
+    while (cursor < sorted.length) {
+      var group = [sorted[cursor]];
+      var groupEnd = sorted[cursor].endMinute;
+      var next = cursor + 1;
+      while (next < sorted.length && sorted[next].startMinute < groupEnd) {
+        group.push(sorted[next]);
+        groupEnd = Math.max(groupEnd, sorted[next].endMinute);
+        next += 1;
+      }
+      var laneEnds = [];
+      var placements = group.map(function (event) {
+        var lane = laneEnds.findIndex(function (end) { return end <= event.startMinute; });
+        if (lane === -1) lane = laneEnds.length;
+        laneEnds[lane] = event.endMinute;
+        return { event: event, lane: lane };
+      });
+      var laneCount = Math.max(1, laneEnds.length);
+      placements.forEach(function (placement) {
+        result.push(Object.assign({}, placement.event, {
+          lane: placement.lane,
+          laneCount: laneCount
+        }));
+      });
+      cursor = next;
+    }
+    return result;
+  }
+
+  function render() {
+    document.body.classList.remove("auth-mode");
+    var logoutButton = document.getElementById("logoutButton");
+    if (logoutButton) logoutButton.hidden = !CLOUD_ENABLED;
+    document.querySelectorAll("[data-view]").forEach(function (button) {
+      button.classList.toggle("active", button.getAttribute("data-view") === ui.view);
+    });
+    if (ui.view === "tasks") renderTasks();
+    else if (ui.view === "goals") renderGoals();
+    else renderDay();
+  }
+
+  function renderDay() {
+    var selected = ui.selectedDate;
+    var courses = courseEventsFor(selected);
+    var tasks = dayTasks(selected);
+    var completed = tasks.filter(function (task) { return task.completed; }).length;
+    var days = weekDates(selected);
+    var weekStart = days[0];
+    var weekEnd = days[6];
+    var weekTasks = state.tasks.filter(function (task) {
+      return task.taskDate && task.taskDate >= weekStart && task.taskDate <= weekEnd;
+    });
+    var weekDone = weekTasks.filter(function (task) { return task.completed; }).length;
+    var weekRescheduled = weekTasks.reduce(function (sum, task) {
+      return sum + Number(task.rescheduleCount || 0);
+    }, 0);
+    var weekHabitChecks = Object.keys(state.habitChecks).filter(function (key) {
+      var date = key.split("|")[0];
+      return date >= weekStart && date <= weekEnd && state.habitChecks[key];
+    }).length;
+
+    var weekHtml = days.map(function (date) {
+      var classes = ["day-chip"];
+      if (date === selected) classes.push("selected");
+      if (courseEventsFor(date).length) classes.push("has-course");
+      return '<button class="' + classes.join(" ") + '" type="button" data-action="select-date" data-date="' +
+        escapeAttr(date) + '"><span>' + weekdayName(date, true) + '</span><strong>' +
+        Number(date.slice(8, 10)) + '</strong></button>';
+    }).join("");
+
+    app.innerHTML =
+      '<section class="date-toolbar">' +
+        '<button class="button icon" type="button" data-action="previous-day" aria-label="前一天">‹</button>' +
+        '<div class="date-center"><strong>' + fullDate(selected) + '</strong><span>' + weekdayName(selected, false) +
+        ' · 第 ' + (courses[0] ? courses[0].week : "—") + ' 周</span></div>' +
+        '<button class="button icon" type="button" data-action="next-day" aria-label="后一天">›</button>' +
+      '</section>' +
+      '<div class="week-strip">' + weekHtml + '</div>' +
+      '<div class="day-layout">' +
+        '<section class="panel">' +
+          '<div class="panel-head"><div><h2>24 小时时间轴</h2><p>' + courses.length + ' 节课程 · ' +
+          tasks.filter(function (task) { return task.startMinute != null; }).length +
+          ' 个定时任务</p></div>' +
+          '<button class="button soft small" type="button" data-action="new-task" data-date="' +
+          escapeAttr(selected) + '">＋ 安排任务</button></div>' +
+          renderTimeline(courses, tasks, selected) +
+        '</section>' +
+        '<aside class="daily-stack">' +
+          renderTodoCard(tasks, completed, selected) +
+          renderHabitCard(selected) +
+          renderGoalSummary() +
+          renderReflectionCard(selected) +
+          renderWeekStats(weekTasks.length, weekDone, weekRescheduled, weekHabitChecks) +
+        '</aside>' +
+      '</div>';
+
+    window.setTimeout(function () {
+      var scroller = document.getElementById("timelineScroll");
+      if (!scroller) return;
+      var focusMinute = selected === todayShanghai()
+        ? Math.max(0, currentShanghaiMinute() - 120)
+        : 420;
+      scroller.scrollTop = ui.timelineScrollTop == null
+        ? focusMinute / 60 * HOUR_HEIGHT
+        : ui.timelineScrollTop;
+      scroller.addEventListener("scroll", function () {
+        ui.timelineScrollTop = scroller.scrollTop;
+      }, { passive: true });
+    }, 0);
+  }
+
+  function renderTimeline(courses, tasks, date) {
+    var events = courses.map(function (course) {
+      return {
+        id: course.id,
+        source: "course",
+        title: course.title,
+        subtitle: course.kind + " · " + course.location,
+        startMinute: course.startMinute,
+        endMinute: course.endMinute,
+        tone: course.conflict ? "conflict" : course.kind === "实验" ? "course-lab" : "course-theory",
+        conflict: course.conflict,
+        raw: course
+      };
+    }).concat(tasks.filter(function (task) {
+      return task.startMinute != null && task.endMinute != null;
+    }).map(function (task) {
+      return {
+        id: task.id,
+        source: "task",
+        title: task.title,
+        subtitle: task.category + " · 弹性任务",
+        startMinute: Number(task.startMinute),
+        endMinute: Number(task.endMinute),
+        tone: taskTone(task.category),
+        completed: Boolean(task.completed),
+        raw: task
+      };
+    }));
+    var positioned = positionEvents(events);
+    var lines = "";
+    for (var hour = 0; hour <= 24; hour += 1) {
+      lines += '<div class="hour-line" style="top:' + (hour * HOUR_HEIGHT) + 'px">';
+      if (hour < 24) {
+        lines += '<span class="hour-label">' + String(hour).padStart(2, "0") + ':00</span>';
+      }
+      lines += '</div>';
+      if (hour < 24) {
+        lines += '<div class="half-line" style="top:' + (hour * HOUR_HEIGHT + HOUR_HEIGHT / 2) + 'px"></div>';
+      }
+    }
+    var eventHtml = positioned.map(function (event) {
+      var top = event.startMinute / 60 * HOUR_HEIGHT;
+      var height = Math.max(28, (event.endMinute - event.startMinute) / 60 * HOUR_HEIGHT);
+      var width = 100 / event.laneCount;
+      var left = event.lane * width;
+      var action = event.source === "task" ? "edit-task" : "course-info";
+      var classes = "event " + event.tone + (event.completed ? " completed" : "");
+      var subtitle = height >= 46
+        ? '<span class="event-meta">' + minuteLabel(event.startMinute) + '–' + minuteLabel(event.endMinute) + '</span>'
+        : "";
+      if (height >= 68) {
+        subtitle += '<span class="event-meta">' + escapeHtml(event.subtitle) + '</span>';
+      }
+      return '<button type="button" class="' + classes + '" data-action="' + action + '" data-id="' +
+        escapeAttr(event.id) + '" style="top:' + top + 'px;height:' + height + 'px;left:calc(' + left +
+        '% + 2px);width:calc(' + width + '% - 4px)" aria-label="' + escapeAttr(event.title + "，" +
+        minuteLabel(event.startMinute) + " 到 " + minuteLabel(event.endMinute)) + '">' +
+        '<span class="event-title">' + (event.conflict ? "⚠ " : "") + escapeHtml(event.title) + '</span>' +
+        subtitle + '</button>';
+    }).join("");
+    var nowLine = date === todayShanghai()
+      ? '<div class="now-line" style="top:' + (currentShanghaiMinute() / 60 * HOUR_HEIGHT) + 'px"></div>'
+      : "";
+    return '<div id="timelineScroll" class="timeline-scroll"><div class="timeline-canvas">' + lines +
+      '<div class="timeline-events" data-action="timeline-empty">' + eventHtml + '</div>' +
+      nowLine + '</div></div>';
+  }
+
+  function renderTodoCard(tasks, completed, date) {
+    var rows = tasks.length ? tasks.map(function (task) {
+      var time = task.startMinute == null
+        ? "弹性安排"
+        : minuteLabel(task.startMinute) + "–" + minuteLabel(task.endMinute);
+      return '<div class="todo-row ' + (task.completed ? "done" : "") + '">' +
+        '<input class="check" type="checkbox" data-action="toggle-task" data-id="' + escapeAttr(task.id) +
+        '" aria-label="完成 ' + escapeAttr(task.title) + '" ' + (task.completed ? "checked" : "") + '>' +
+        '<button class="row-main" type="button" data-action="edit-task" data-id="' + escapeAttr(task.id) +
+        '" style="border:0;background:transparent;text-align:left;padding:0;cursor:pointer">' +
+        '<span class="row-title">' + escapeHtml(task.title) + '</span>' +
+        '<span class="row-meta"><span class="badge ' + categoryBadge(task.category) + '">' +
+        escapeHtml(task.category) + '</span> · ' + time +
+        (task.rescheduleCount ? " · 改期 " + task.rescheduleCount + " 次" : "") + '</span></button></div>';
+    }).join("") : '<div class="empty">今天还没有任务。课程外的英语、复习或生活事项可以只放进 To-do，不必强行定时间。</div>';
+    var percent = tasks.length ? Math.round(completed / tasks.length * 100) : 0;
+    return '<section class="panel"><div class="panel-head"><div><h3>当日 To-do</h3><p>' +
+      completed + ' / ' + tasks.length + ' 已完成</p></div><button class="button icon small" type="button" ' +
+      'data-action="new-task" data-date="' + escapeAttr(date) + '" aria-label="新增当日任务">＋</button></div>' +
+      '<div class="panel-body"><div class="progress-track" style="margin-bottom:12px"><div class="progress-bar" style="width:' +
+      percent + '%"></div></div><div class="card-list">' + rows + '</div></div></section>';
+  }
+
+  function renderHabitCard(date) {
+    var rows = state.habits.map(function (habit) {
+      var key = date + "|" + habit.id;
+      var checked = Boolean(state.habitChecks[key]);
+      return '<div class="habit-row"><input class="check" type="checkbox" data-action="toggle-habit" data-id="' +
+        escapeAttr(habit.id) + '" ' + (checked ? "checked" : "") + '><div class="row-main"><span class="row-title">' +
+        escapeHtml(habit.title) + '</span></div><button class="mini-button" type="button" data-action="delete-habit" ' +
+        'data-id="' + escapeAttr(habit.id) + '" aria-label="删除习惯">×</button></div>';
+    }).join("");
+    return '<section class="panel"><div class="panel-head"><div><h3>习惯打卡</h3><p>只记是否完成，不占用固定时间</p></div>' +
+      '<span class="badge green">' + state.habits.filter(function (habit) {
+        return state.habitChecks[date + "|" + habit.id];
+      }).length + ' / ' + state.habits.length + '</span></div><div class="panel-body"><div class="card-list">' +
+      rows + '</div><div class="inline-form"><label class="sr-only" for="newHabitInput">新增习惯</label>' +
+      '<input id="newHabitInput" class="field" maxlength="40" placeholder="新增习惯"><button class="button small" ' +
+      'type="button" data-action="add-habit">添加</button></div></div></section>';
+  }
+
+  function renderGoalSummary() {
+    if (!state.goals.length) {
+      return '<section class="panel"><div class="panel-head"><div><h3>目标进度</h3><p>按章节、真题套数等产出计算</p></div></div>' +
+        '<div class="panel-body"><div class="empty">尚未建立目标。去“目标进度”录入课程和章节权重。</div></div></section>';
+    }
+    var html = state.goals.slice(0, 4).map(function (goal) {
+      var progress = goalProgress(goal);
+      return '<button type="button" data-action="view-goals" class="goal-mini" style="border:0;background:transparent;' +
+        'padding:0;text-align:left;cursor:pointer"><span class="goal-mini-line"><strong>' +
+        escapeHtml(goal.title) + '</strong><span>' + progress + '%</span></span><span class="progress-track">' +
+        '<span class="progress-bar" style="display:block;width:' + progress + '%"></span></span></button>';
+    }).join("");
+    return '<section class="panel"><div class="panel-head"><div><h3>目标进度</h3><p>重要章节对总进度影响更大</p></div>' +
+      '<button class="button small" type="button" data-action="view-goals">查看</button></div>' +
+      '<div class="panel-body"><div class="goal-summary">' + html + '</div></div></section>';
+  }
+
+  function renderReflectionCard(date) {
+    var reflection = state.reflections[date] || "";
+    return '<section class="panel wide"><div class="panel-head"><div><h3>当日感悟</h3><p>记录状态、收获和明天的调整</p></div>' +
+      '<span class="badge">' + (CLOUD_ENABLED ? "自动云同步" : "本机自动保存") + '</span></div><div class="panel-body">' +
+      '<label class="sr-only" for="reflectionInput">当日感悟</label><textarea id="reflectionInput" class="field" ' +
+      'maxlength="4000" placeholder="今天发生了什么？哪些安排有效？明天最想调整什么？">' +
+      escapeHtml(reflection) + '</textarea><div id="reflectionStatus" class="reflection-status">' +
+      (reflection ? "已保存" : "尚未填写") + '</div></div></section>';
+  }
+
+  function renderWeekStats(total, completed, rescheduled, habitChecks) {
+    var rate = total ? Math.round(completed / total * 100) : 0;
+    return '<section class="panel wide"><div class="panel-head"><div><h3>本周统计</h3><p>用于复盘，不用于惩罚自己</p></div></div>' +
+      '<div class="panel-body"><div class="stats-grid" style="margin:0"><div class="stat"><span>任务</span><strong>' +
+      total + '</strong></div><div class="stat"><span>完成率</span><strong>' + rate +
+      '%</strong></div><div class="stat"><span>改期</span><strong>' + rescheduled +
+      '</strong></div><div class="stat"><span>打卡</span><strong>' + habitChecks +
+      '</strong></div></div></div></section>';
+  }
+
+  function renderTasks() {
+    var query = ui.taskSearch.trim().toLocaleLowerCase("zh-CN");
+    var filtered = state.tasks.filter(function (task) {
+      if (ui.taskFilter === "open" && task.completed) return false;
+      if (ui.taskFilter === "done" && !task.completed) return false;
+      if (ui.taskFilter === "inbox" && (task.completed || task.taskDate)) return false;
+      if (query) {
+        var haystack = (task.title + " " + task.category + " " + (task.notes || "")).toLocaleLowerCase("zh-CN");
+        if (!haystack.includes(query)) return false;
+      }
+      return true;
+    }).sort(function (a, b) {
+      return Number(a.completed) - Number(b.completed) ||
+        String(a.taskDate || "9999").localeCompare(String(b.taskDate || "9999")) ||
+        String(b.updatedAt || "").localeCompare(String(a.updatedAt || ""));
+    });
+    var total = state.tasks.length;
+    var done = state.tasks.filter(function (task) { return task.completed; }).length;
+    var inbox = state.tasks.filter(function (task) { return !task.taskDate && !task.completed; }).length;
+    var rescheduled = state.tasks.reduce(function (sum, task) {
+      return sum + Number(task.rescheduleCount || 0);
+    }, 0);
+
+    var filters = [
+      ["open", "待完成"],
+      ["inbox", "收集箱"],
+      ["done", "已完成"],
+      ["all", "全部"]
+    ].map(function (pair) {
+      return '<button class="filter ' + (ui.taskFilter === pair[0] ? "active" : "") + '" type="button" ' +
+        'data-action="task-filter" data-filter="' + pair[0] + '">' + pair[1] + '</button>';
+    }).join("");
+    var rows = filtered.length ? filtered.map(function (task) {
+      var time = task.startMinute == null ? "" : " " + minuteLabel(task.startMinute) + "–" + minuteLabel(task.endMinute);
+      return '<div class="task-row ' + (task.completed ? "done" : "") + '">' +
+        '<input class="check" type="checkbox" data-action="toggle-task" data-id="' + escapeAttr(task.id) +
+        '" ' + (task.completed ? "checked" : "") + '><div class="row-main"><span class="row-title">' +
+        escapeHtml(task.title) + '</span><div class="row-meta"><span class="badge ' +
+        categoryBadge(task.category) + '">' + escapeHtml(task.category) + '</span> · ' +
+        (task.taskDate ? task.taskDate + time : "未安排日期") +
+        (task.rescheduleCount ? " · 改期 " + task.rescheduleCount + " 次" : "") +
+        (task.notes ? " · " + escapeHtml(task.notes) : "") + '</div></div>' +
+        '<div class="row-actions"><button class="mini-button" type="button" data-action="edit-task" data-id="' +
+        escapeAttr(task.id) + '">编辑</button></div></div>';
+    }).join("") : '<div class="empty">这个筛选条件下没有任务。</div>';
+
+    app.innerHTML = '<div class="stats-grid"><div class="stat"><span>任务总数</span><strong>' + total +
+      '</strong></div><div class="stat"><span>已完成</span><strong>' + done +
+      '</strong></div><div class="stat"><span>收集箱</span><strong>' + inbox +
+      '</strong></div><div class="stat"><span>累计改期</span><strong>' + rescheduled +
+      '</strong></div></div><section class="panel"><div class="panel-head"><div><h2>统一任务库</h2>' +
+      '<p>先收集，再决定放到哪一天、哪个时间段</p></div><button class="button primary small" type="button" ' +
+      'data-action="new-task">＋ 新增任务</button></div><div class="panel-body"><div class="library-toolbar">' +
+      '<label><span class="sr-only">搜索任务</span><input id="taskSearch" class="field" placeholder="搜索任务或备注" value="' +
+      escapeAttr(ui.taskSearch) + '"></label><div class="filter-group">' + filters +
+      '</div><button class="button small" type="button" data-action="go-today">回到今天</button></div>' +
+      '<div class="task-table">' + rows + '</div></div></section>';
+  }
+
+  function renderGoals() {
+    var cards = state.goals.length ? state.goals.map(function (goal) {
+      var progress = goalProgress(goal);
+      var items = goal.items || [];
+      var itemRows = items.length ? items.map(function (item) {
+        return '<div class="item-row"><div class="row-main"><span class="row-title">' + escapeHtml(item.title) +
+          '</span><span class="row-meta">权重 ' + compactNumber(item.weight) + ' · 目标 ' +
+          compactNumber(item.targetCount) + ' ' + escapeHtml(item.unit) + '</span></div>' +
+          '<button class="mini-button" type="button" data-action="item-minus" data-goal-id="' +
+          escapeAttr(goal.id) + '" data-id="' + escapeAttr(item.id) + '" aria-label="减少完成量">−</button>' +
+          '<span class="item-count">' + compactNumber(item.completedCount) + ' / ' +
+          compactNumber(item.targetCount) + '</span><button class="mini-button" type="button" ' +
+          'data-action="item-plus" data-goal-id="' + escapeAttr(goal.id) + '" data-id="' +
+          escapeAttr(item.id) + '" aria-label="增加完成量">＋</button><button class="mini-button" type="button" ' +
+          'data-action="edit-item" data-goal-id="' + escapeAttr(goal.id) + '" data-id="' +
+          escapeAttr(item.id) + '">编辑</button></div>';
+      }).join("") : '<div class="empty">还没有章节或真题进度项。</div>';
+      return '<article class="goal-card"><div class="goal-card-head"><div class="goal-card-title"><div><h3>' +
+        escapeHtml(goal.title) + '</h3><p><span class="badge ' + categoryBadge(goal.category) + '">' +
+        escapeHtml(goal.category) + '</span>' + (goal.deadline ? " · 截止 " + goal.deadline : "") +
+        '</p></div><div class="goal-percent">' + progress + '%</div></div><div class="progress-track" ' +
+        'style="margin-top:12px"><div class="progress-bar" style="width:' + progress +
+        '%"></div></div></div><div class="goal-card-body"><div style="display:flex;justify-content:space-between;' +
+        'gap:8px;align-items:center"><strong style="font-size:.88rem">实际产出</strong><div>' +
+        '<button class="button small" type="button" data-action="edit-goal" data-id="' +
+        escapeAttr(goal.id) + '">目标设置</button> <button class="button soft small" type="button" ' +
+        'data-action="new-item" data-goal-id="' + escapeAttr(goal.id) + '">＋ 进度项</button></div></div>' +
+        '<div class="goal-items">' + itemRows + '</div></div></article>';
+    }).join("") : '<div class="empty" style="grid-column:1/-1;padding:38px 18px">尚未建立学习目标。先建立“诊断学期末复习”或“雅思学习”，再录入章节、真题套数和权重。</div>';
+
+    app.innerHTML = '<div class="formula-note"><strong>加权进度：</strong>Σ（重要权重 × 该项完成比例）÷ Σ（重要权重）。' +
+      '因此高频考点或重要章节会比低权重章节更影响总进度。</div><div style="display:flex;justify-content:' +
+      'space-between;align-items:center;gap:12px;margin-bottom:14px"><div><h2 style="margin:0;font-size:1.2rem">' +
+      '目标与产出</h2><p style="margin:3px 0 0;color:var(--muted);font-size:.84rem">章节、真题套数、页数都可以作为进度单位</p>' +
+      '</div><button class="button primary" type="button" data-action="new-goal">＋ 新增目标</button></div>' +
+      '<div class="goal-grid">' + cards + '</div>';
+  }
+
+  function showDialog(dialog) {
+    if (typeof dialog.showModal === "function") dialog.showModal();
+    else dialog.setAttribute("open", "");
+  }
+
+  function closeDialog(dialog) {
+    if (!dialog) return;
+    if (typeof dialog.close === "function") dialog.close();
+    else dialog.removeAttribute("open");
+  }
+
+  function toggleTimedFields() {
+    var enabled = document.getElementById("taskTimed").checked;
+    document.querySelectorAll(".timed-field").forEach(function (field) {
+      field.hidden = !enabled;
+    });
+  }
+
+  function openTaskDialog(id, date, startMinute) {
+    var task = id ? state.tasks.find(function (row) { return row.id === id; }) : null;
+    ui.taskEditingId = task ? task.id : null;
+    document.getElementById("taskDialogTitle").textContent = task ? "编辑任务" : "新增任务";
+    document.getElementById("taskTitle").value = task ? task.title : "";
+    document.getElementById("taskCategory").value = task ? task.category : "医学";
+    document.getElementById("taskDate").value = task ? (task.taskDate || "") : (date || "");
+    var timed = task ? task.startMinute != null : startMinute != null;
+    document.getElementById("taskTimed").checked = timed;
+    var start = task && task.startMinute != null ? task.startMinute : startMinute != null ? startMinute : 480;
+    var end = task && task.endMinute != null ? task.endMinute : Math.min(1439, start + 60);
+    document.getElementById("taskStart").value = minuteLabel(start);
+    document.getElementById("taskEnd").value = minuteLabel(end);
+    document.getElementById("taskNotes").value = task ? (task.notes || "") : "";
+    document.getElementById("taskDelete").hidden = !task;
+    toggleTimedFields();
+    showDialog(taskDialog);
+    window.setTimeout(function () { document.getElementById("taskTitle").focus(); }, 30);
+  }
+
+  function openGoalDialog(id) {
+    var goal = id ? state.goals.find(function (row) { return row.id === id; }) : null;
+    ui.goalEditingId = goal ? goal.id : null;
+    document.getElementById("goalDialogTitle").textContent = goal ? "编辑目标" : "新增目标";
+    document.getElementById("goalTitle").value = goal ? goal.title : "";
+    document.getElementById("goalCategory").value = goal ? goal.category : "医学";
+    document.getElementById("goalDeadline").value = goal ? (goal.deadline || "") : "";
+    document.getElementById("goalDelete").hidden = !goal;
+    showDialog(goalDialog);
+    window.setTimeout(function () { document.getElementById("goalTitle").focus(); }, 30);
+  }
+
+  function openItemDialog(goalId, itemId) {
+    var goal = state.goals.find(function (row) { return row.id === goalId; });
+    if (!goal) return;
+    var item = itemId ? goal.items.find(function (row) { return row.id === itemId; }) : null;
+    ui.itemGoalId = goal.id;
+    ui.itemEditingId = item ? item.id : null;
+    document.getElementById("itemDialogTitle").textContent = item ? "编辑进度项" : "新增进度项";
+    document.getElementById("itemTitle").value = item ? item.title : "";
+    document.getElementById("itemUnit").value = item ? item.unit : "章节";
+    document.getElementById("itemWeight").value = item ? item.weight : 1;
+    document.getElementById("itemTarget").value = item ? item.targetCount : 1;
+    document.getElementById("itemCompleted").value = item ? item.completedCount : 0;
+    document.getElementById("itemDelete").hidden = !item;
+    showDialog(itemDialog);
+    window.setTimeout(function () { document.getElementById("itemTitle").focus(); }, 30);
+  }
+
+  document.addEventListener("click", function (event) {
+    var viewButton = event.target.closest("[data-view]");
+    if (viewButton) {
+      ui.view = viewButton.getAttribute("data-view");
+      render();
+      return;
+    }
+    var target = event.target.closest("[data-action]");
+    if (!target) return;
+    var action = target.getAttribute("data-action");
+
+    if (action === "toggle-auth-mode") {
+      authMode = authMode === "login" ? "signup" : "login";
+      renderAuth();
+      return;
+    }
+    if (action === "logout") {
+      handleLogout();
+      return;
+    }
+    if (action === "close-dialog") {
+      closeDialog(target.closest("dialog"));
+      return;
+    }
+    if (action === "previous-day" || action === "next-day") {
+      ui.selectedDate = addDays(ui.selectedDate, action === "previous-day" ? -1 : 1);
+      ui.timelineScrollTop = null;
+      renderDay();
+      return;
+    }
+    if (action === "select-date") {
+      ui.selectedDate = target.getAttribute("data-date");
+      ui.timelineScrollTop = null;
+      renderDay();
+      return;
+    }
+    if (action === "go-today") {
+      ui.selectedDate = todayShanghai();
+      ui.timelineScrollTop = null;
+      ui.view = "day";
+      render();
+      return;
+    }
+    if (action === "new-task") {
+      openTaskDialog(null, target.getAttribute("data-date"), null);
+      return;
+    }
+    if (action === "timeline-empty" && event.target === target) {
+      var rect = target.getBoundingClientRect();
+      var minute = Math.max(0, Math.min(1425,
+        Math.round((event.clientY - rect.top) / HOUR_HEIGHT * 4) * 15
+      ));
+      openTaskDialog(null, ui.selectedDate, minute);
+      return;
+    }
+    if (action === "edit-task") {
+      openTaskDialog(target.getAttribute("data-id"), null, null);
+      return;
+    }
+    if (action === "course-info") {
+      var course = COURSE_EVENTS.find(function (row) { return row.id === target.getAttribute("data-id"); });
+      if (course) {
+        showToast(course.title + " · " + minuteLabel(course.startMinute) + "–" +
+          minuteLabel(course.endMinute) + " · " + course.location + " · " + course.teacher);
+      }
+      return;
+    }
+    if (action === "add-habit") {
+      var habitInput = document.getElementById("newHabitInput");
+      var title = habitInput ? habitInput.value.trim() : "";
+      if (!title) {
+        showToast("先填写习惯名称");
+        return;
+      }
+      state.habits.push({ id: uid("habit"), title: title, sortOrder: state.habits.length });
+      saveState("习惯已添加");
+      renderDay();
+      return;
+    }
+    if (action === "delete-habit") {
+      var habitId = target.getAttribute("data-id");
+      if (!window.confirm("删除这个习惯及其历史打卡记录？")) return;
+      state.habits = state.habits.filter(function (habit) { return habit.id !== habitId; });
+      Object.keys(state.habitChecks).forEach(function (key) {
+        if (key.endsWith("|" + habitId)) delete state.habitChecks[key];
+      });
+      saveState("习惯已删除");
+      renderDay();
+      return;
+    }
+    if (action === "task-filter") {
+      ui.taskFilter = target.getAttribute("data-filter");
+      renderTasks();
+      return;
+    }
+    if (action === "view-goals") {
+      ui.view = "goals";
+      render();
+      return;
+    }
+    if (action === "new-goal") {
+      openGoalDialog(null);
+      return;
+    }
+    if (action === "edit-goal") {
+      openGoalDialog(target.getAttribute("data-id"));
+      return;
+    }
+    if (action === "new-item") {
+      openItemDialog(target.getAttribute("data-goal-id"), null);
+      return;
+    }
+    if (action === "edit-item") {
+      openItemDialog(target.getAttribute("data-goal-id"), target.getAttribute("data-id"));
+      return;
+    }
+    if (action === "item-plus" || action === "item-minus") {
+      var goalForStep = state.goals.find(function (goal) {
+        return goal.id === target.getAttribute("data-goal-id");
+      });
+      var itemForStep = goalForStep && goalForStep.items.find(function (item) {
+        return item.id === target.getAttribute("data-id");
+      });
+      if (!itemForStep) return;
+      var step = action === "item-plus" ? 1 : -1;
+      itemForStep.completedCount = Math.max(0, Math.min(
+        Number(itemForStep.targetCount),
+        Number(itemForStep.completedCount || 0) + step
+      ));
+      saveState();
+      renderGoals();
+      return;
+    }
+    if (action === "delete-task") {
+      if (!ui.taskEditingId || !window.confirm("确认删除这个任务？")) return;
+      state.tasks = state.tasks.filter(function (task) { return task.id !== ui.taskEditingId; });
+      saveState("任务已删除");
+      closeDialog(taskDialog);
+      render();
+      return;
+    }
+    if (action === "delete-goal") {
+      if (!ui.goalEditingId || !window.confirm("确认删除整个目标及全部进度项？")) return;
+      state.goals = state.goals.filter(function (goal) { return goal.id !== ui.goalEditingId; });
+      saveState("目标已删除");
+      closeDialog(goalDialog);
+      renderGoals();
+      return;
+    }
+    if (action === "delete-item") {
+      var goalForDelete = state.goals.find(function (goal) { return goal.id === ui.itemGoalId; });
+      if (!goalForDelete || !ui.itemEditingId || !window.confirm("确认删除这个进度项？")) return;
+      goalForDelete.items = goalForDelete.items.filter(function (item) { return item.id !== ui.itemEditingId; });
+      saveState("进度项已删除");
+      closeDialog(itemDialog);
+      renderGoals();
+      return;
+    }
+    if (action === "export-data") {
+      exportData();
+      return;
+    }
+    if (action === "import-data") {
+      importFile.click();
+    }
+  });
+
+  document.addEventListener("change", function (event) {
+    var target = event.target;
+    var action = target.getAttribute && target.getAttribute("data-action");
+    if (target.id === "taskTimed") {
+      toggleTimedFields();
+      return;
+    }
+    if (action === "toggle-task") {
+      var task = state.tasks.find(function (row) { return row.id === target.getAttribute("data-id"); });
+      if (!task) return;
+      task.completed = target.checked;
+      task.updatedAt = new Date().toISOString();
+      saveState(target.checked ? "已记入完成统计" : "已恢复为待完成");
+      render();
+      return;
+    }
+    if (action === "toggle-habit") {
+      var key = ui.selectedDate + "|" + target.getAttribute("data-id");
+      state.habitChecks[key] = target.checked;
+      saveState();
+      renderDay();
+    }
+  });
+
+  document.addEventListener("input", function (event) {
+    var target = event.target;
+    if (target.id === "reflectionInput") {
+      state.reflections[ui.selectedDate] = target.value;
+      saveState();
+      var status = document.getElementById("reflectionStatus");
+      if (status) status.textContent = "已自动保存";
+      return;
+    }
+    if (target.id === "taskSearch") {
+      ui.taskSearch = target.value;
+      var cursor = target.selectionStart || target.value.length;
+      renderTasks();
+      window.setTimeout(function () {
+        var input = document.getElementById("taskSearch");
+        if (input) {
+          input.focus();
+          input.setSelectionRange(cursor, cursor);
+        }
+      }, 0);
+    }
+  });
+
+  document.addEventListener("submit", function (event) {
+    if (event.target && event.target.id === "authForm") {
+      event.preventDefault();
+      handleAuthSubmit(event.target);
+    }
+  });
+
+  taskForm.addEventListener("submit", function (event) {
+    event.preventDefault();
+    var title = document.getElementById("taskTitle").value.trim();
+    var category = document.getElementById("taskCategory").value;
+    var taskDate = document.getElementById("taskDate").value || null;
+    var timed = document.getElementById("taskTimed").checked && Boolean(taskDate);
+    var startMinute = timed ? inputToMinute(document.getElementById("taskStart").value) : null;
+    var endMinute = timed ? inputToMinute(document.getElementById("taskEnd").value) : null;
+    var notes = document.getElementById("taskNotes").value.trim();
+    if (!title) return;
+    if (timed && (startMinute == null || endMinute == null || endMinute <= startMinute)) {
+      showToast("结束时间必须晚于开始时间");
+      return;
+    }
+    var existing = ui.taskEditingId
+      ? state.tasks.find(function (task) { return task.id === ui.taskEditingId; })
+      : null;
+    if (existing) {
+      var changedSchedule = existing.taskDate !== taskDate ||
+        existing.startMinute !== startMinute || existing.endMinute !== endMinute;
+      existing.title = title;
+      existing.category = category;
+      existing.taskDate = taskDate;
+      existing.startMinute = startMinute;
+      existing.endMinute = endMinute;
+      existing.notes = notes;
+      existing.rescheduleCount = Number(existing.rescheduleCount || 0) + (changedSchedule ? 1 : 0);
+      existing.updatedAt = new Date().toISOString();
+    } else {
+      state.tasks.push({
+        id: uid("task"),
+        title: title,
+        category: category,
+        taskDate: taskDate,
+        startMinute: startMinute,
+        endMinute: endMinute,
+        completed: false,
+        notes: notes,
+        rescheduleCount: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+    }
+    saveState(existing ? "任务已更新" : "任务已加入任务库");
+    closeDialog(taskDialog);
+    render();
+  });
+
+  goalForm.addEventListener("submit", function (event) {
+    event.preventDefault();
+    var title = document.getElementById("goalTitle").value.trim();
+    if (!title) return;
+    var category = document.getElementById("goalCategory").value;
+    var deadline = document.getElementById("goalDeadline").value || null;
+    var existing = ui.goalEditingId
+      ? state.goals.find(function (goal) { return goal.id === ui.goalEditingId; })
+      : null;
+    if (existing) {
+      existing.title = title;
+      existing.category = category;
+      existing.deadline = deadline;
+      existing.updatedAt = new Date().toISOString();
+    } else {
+      state.goals.push({
+        id: uid("goal"),
+        title: title,
+        category: category,
+        deadline: deadline,
+        items: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+    }
+    saveState(existing ? "目标已更新" : "目标已建立");
+    closeDialog(goalDialog);
+    renderGoals();
+  });
+
+  itemForm.addEventListener("submit", function (event) {
+    event.preventDefault();
+    var goal = state.goals.find(function (row) { return row.id === ui.itemGoalId; });
+    if (!goal) return;
+    var title = document.getElementById("itemTitle").value.trim();
+    var unit = document.getElementById("itemUnit").value;
+    var weight = Number(document.getElementById("itemWeight").value);
+    var targetCount = Number(document.getElementById("itemTarget").value);
+    var completedCount = Number(document.getElementById("itemCompleted").value);
+    if (!title || weight <= 0 || targetCount <= 0 || completedCount < 0) {
+      showToast("请检查进度项的数据");
+      return;
+    }
+    completedCount = Math.min(targetCount, completedCount);
+    var existing = ui.itemEditingId
+      ? goal.items.find(function (item) { return item.id === ui.itemEditingId; })
+      : null;
+    if (existing) {
+      existing.title = title;
+      existing.unit = unit;
+      existing.weight = weight;
+      existing.targetCount = targetCount;
+      existing.completedCount = completedCount;
+    } else {
+      goal.items.push({
+        id: uid("item"),
+        title: title,
+        unit: unit,
+        weight: weight,
+        targetCount: targetCount,
+        completedCount: completedCount
+      });
+    }
+    goal.updatedAt = new Date().toISOString();
+    saveState(existing ? "进度项已更新" : "进度项已添加");
+    closeDialog(itemDialog);
+    renderGoals();
+  });
+
+  function exportData() {
+    var payload = {
+      app: "Yuki 日程与复盘",
+      formatVersion: 1,
+      exportedAt: new Date().toISOString(),
+      courseCount: COURSE_EVENTS.length,
+      data: state
+    };
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.href = url;
+    link.download = "Yuki日程备份_" + todayShanghai() + ".json";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    showToast("备份文件已导出");
+  }
+
+  importFile.addEventListener("change", function () {
+    var file = importFile.files && importFile.files[0];
+    if (!file) return;
+    file.text().then(function (text) {
+      var parsed = JSON.parse(text);
+      var incoming = parsed && parsed.data ? parsed.data : parsed;
+      if (!incoming || !Array.isArray(incoming.tasks) || !Array.isArray(incoming.goals)) {
+        throw new Error("备份格式不正确");
+      }
+      if (!window.confirm("导入会替换当前浏览器里的任务、复盘和目标，确认继续？")) return;
+      state = normalizeState(incoming);
+      saveState("备份已恢复");
+      render();
+    }).catch(function () {
+      showToast("无法读取这个备份文件");
+    }).finally(function () {
+      importFile.value = "";
+    });
+  });
+
+  document.querySelectorAll("dialog").forEach(function (dialog) {
+    dialog.addEventListener("click", function (event) {
+      if (event.target === dialog) closeDialog(dialog);
+    });
+  });
+
+  if (navigator.storage && typeof navigator.storage.persist === "function") {
+    navigator.storage.persist().catch(function () {});
+  }
+
+  window.addEventListener("online", function () {
+    if (CLOUD_ENABLED && authSession) syncNow({ silent: true });
+  });
+
+  window.addEventListener("offline", function () {
+    if (CLOUD_ENABLED && authSession) setSyncStatus("离线，稍后同步", "offline");
+  });
+
+  window.addEventListener("focus", function () {
+    if (CLOUD_ENABLED && authSession) syncNow({ silent: true });
+  });
+
+  window.setInterval(function () {
+    if (CLOUD_ENABLED && authSession && document.visibilityState === "visible") {
+      syncNow({ silent: true });
+    }
+  }, 30000);
+
+})();
+</script>
+</body>
+</html>
