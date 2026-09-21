@@ -590,15 +590,20 @@
           </label>
           <label class="field-label">分类
             <select id="taskCategory" class="field">
+              <option>课程</option>
               <option>医学</option>
               <option>英语</option>
               <option>工科 / 机器人</option>
               <option>论文</option>
               <option>生活</option>
             </select>
+            <small style="color:var(--muted)">把“课程”改成其他分类后，会作为普通任务进入待办与完成统计</small>
           </label>
           <label class="field-label">安排日期（可留空进入收集箱）
             <input id="taskDate" class="field" type="date">
+          </label>
+          <label class="field-label full">地点（可选）
+            <input id="taskLocation" class="field" maxlength="120" placeholder="例如：北苑 2804、图书馆或线上">
           </label>
           <label class="switch-line full">
             <input id="taskTimed" class="check" type="checkbox">
@@ -628,7 +633,7 @@
         <button id="taskDelete" class="button danger" type="button" data-action="delete-task" hidden>删除</button>
         <div class="dialog-actions-right">
           <button class="button" type="button" data-action="close-dialog">取消</button>
-          <button class="button primary" type="submit">保存任务</button>
+          <button class="button primary" type="submit">保存</button>
         </div>
       </div>
     </form>
@@ -724,7 +729,9 @@
   var LEGACY_MIGRATION_KEY = "yuki-dayflow-legacy-migrated-v1";
   var AUTH_STORAGE_KEY = "yuki-dayflow-auth-v1";
   var HOUR_HEIGHT = 64;
-  var CATEGORY_OPTIONS = ["医学", "英语", "工科 / 机器人", "论文", "生活"];
+  var TERM_START_DATE = "2026-09-21";
+  var CATEGORY_OPTIONS = ["课程", "医学", "英语", "工科 / 机器人", "论文", "生活"];
+  var COURSE_TASKS_VERSION = 1;
   var DEFAULT_HABITS = ["英语输入", "工科 / 机器人", "运动或步行", "睡前复盘"];
 
   var app = document.getElementById("app");
@@ -762,7 +769,7 @@
   function defaultState() {
     return {
       version: 1,
-      tasks: [],
+      tasks: COURSE_EVENTS.map(courseToTask),
       habits: DEFAULT_HABITS.map(function (title, index) {
         return { id: "habit-" + (index + 1), title: title, sortOrder: index };
       }),
@@ -772,23 +779,80 @@
       monthlyReviews: {},
       goalHistory: {},
       goals: [],
-      meta: { updatedAt: "" }
+      meta: { updatedAt: "", courseTasksVersion: COURSE_TASKS_VERSION }
     };
+  }
+
+  function courseToTask(course) {
+    return {
+      id: "task-" + course.id,
+      sourceCourseId: course.id,
+      title: course.title,
+      category: "课程",
+      taskDate: course.date,
+      startMinute: course.startMinute,
+      endMinute: course.endMinute,
+      actualStartMinute: null,
+      actualEndMinute: null,
+      completed: false,
+      completedAt: null,
+      location: course.location || "",
+      notes: [
+        course.kind ? "课程类型：" + course.kind : "",
+        course.teacher ? "教师：" + course.teacher : "",
+        course.week ? "原课表：第 " + course.week + " 周" + (course.sections ? " · " + course.sections : "") : ""
+      ].filter(Boolean).join("\n"),
+      completionNote: "",
+      rescheduleCount: 0,
+      courseKind: course.kind || "",
+      teacher: course.teacher || "",
+      week: course.week || null,
+      sections: course.sections || "",
+      conflict: Boolean(course.conflict),
+      createdAt: course.date + "T00:00:00.000Z",
+      updatedAt: course.date + "T00:00:00.000Z"
+    };
+  }
+
+  function migrateCoursesToTasks(tasks, meta) {
+    var nextTasks = tasks.slice();
+    var nextMeta = Object.assign({}, meta || {});
+    if (Number(nextMeta.courseTasksVersion || 0) < COURSE_TASKS_VERSION) {
+      var imported = new Set(nextTasks.map(function (task) {
+        return task.sourceCourseId || (String(task.id || "").startsWith("task-course-")
+          ? String(task.id).slice(5)
+          : "");
+      }).filter(Boolean));
+      COURSE_EVENTS.forEach(function (course) {
+        if (!imported.has(course.id)) nextTasks.push(courseToTask(course));
+      });
+      nextMeta.courseTasksVersion = COURSE_TASKS_VERSION;
+    }
+    return { tasks: nextTasks, meta: nextMeta };
   }
 
   function normalizeState(value) {
     var fallback = defaultState();
     if (!value || typeof value !== "object") return fallback;
+    var normalizedTasks = Array.isArray(value.tasks) ? value.tasks.map(function (task) {
+      return Object.assign({
+        actualStartMinute: null,
+        actualEndMinute: null,
+        completionNote: "",
+        completedAt: null,
+        location: ""
+      }, task);
+    }) : [];
+    var normalizedMeta = value.meta && typeof value.meta === "object"
+      ? {
+          updatedAt: typeof value.meta.updatedAt === "string" ? value.meta.updatedAt : "",
+          courseTasksVersion: Number(value.meta.courseTasksVersion || 0)
+        }
+      : { updatedAt: "", courseTasksVersion: 0 };
+    var migrated = migrateCoursesToTasks(normalizedTasks, normalizedMeta);
     return {
       version: 1,
-      tasks: Array.isArray(value.tasks) ? value.tasks.map(function (task) {
-        return Object.assign({
-          actualStartMinute: null,
-          actualEndMinute: null,
-          completionNote: "",
-          completedAt: null
-        }, task);
-      }) : [],
+      tasks: migrated.tasks,
       habits: Array.isArray(value.habits) && value.habits.length ? value.habits : fallback.habits,
       habitChecks: value.habitChecks && typeof value.habitChecks === "object" ? value.habitChecks : {},
       reflections: value.reflections && typeof value.reflections === "object" ? value.reflections : {},
@@ -798,9 +862,7 @@
       goals: Array.isArray(value.goals) ? value.goals.map(function (goal) {
         return Object.assign({}, goal, { items: Array.isArray(goal.items) ? goal.items : [] });
       }) : [],
-      meta: value.meta && typeof value.meta === "object"
-        ? { updatedAt: typeof value.meta.updatedAt === "string" ? value.meta.updatedAt : "" }
-        : { updatedAt: "" }
+      meta: migrated.meta
     };
   }
 
@@ -1372,6 +1434,13 @@
     });
   }
 
+  function academicWeek(date) {
+    var start = new Date(TERM_START_DATE + "T00:00:00Z");
+    var current = new Date(date + "T00:00:00Z");
+    var week = Math.floor((current - start) / 604800000) + 1;
+    return week >= 1 && week <= 20 ? week : null;
+  }
+
   function minuteLabel(minute) {
     var hour = Math.floor(minute / 60);
     var rest = minute % 60;
@@ -1402,7 +1471,15 @@
   }
 
   function courseEventsFor(date) {
-    return COURSE_EVENTS.filter(function (event) { return event.date === date; });
+    return state.tasks.filter(function (task) {
+      return isCourseTask(task) && task.taskDate === date;
+    }).sort(function (a, b) {
+      return Number(a.startMinute || 0) - Number(b.startMinute || 0);
+    });
+  }
+
+  function isCourseTask(task) {
+    return task && task.category === "课程";
   }
 
   function dayTasks(date) {
@@ -1429,6 +1506,7 @@
   }
 
   function taskTone(category) {
+    if (category === "课程") return "course-theory";
     if (category === "医学") return "task-med";
     if (category === "英语") return "task-eng";
     if (category === "工科 / 机器人") return "task-tech";
@@ -1437,6 +1515,7 @@
   }
 
   function categoryBadge(category) {
+    if (category === "课程") return "blue";
     if (category === "医学") return "violet";
     if (category === "英语") return "amber";
     if (category === "工科 / 机器人") return "blue";
@@ -1493,13 +1572,13 @@
   function renderDay() {
     var selected = ui.selectedDate;
     var courses = courseEventsFor(selected);
-    var tasks = dayTasks(selected);
+    var tasks = dayTasks(selected).filter(function (task) { return !isCourseTask(task); });
     var completed = tasks.filter(function (task) { return task.completed; }).length;
     var days = weekDates(selected);
     var weekStart = days[0];
     var weekEnd = days[6];
     var weekTasks = state.tasks.filter(function (task) {
-      return task.taskDate && task.taskDate >= weekStart && task.taskDate <= weekEnd;
+      return !isCourseTask(task) && task.taskDate && task.taskDate >= weekStart && task.taskDate <= weekEnd;
     });
     var weekDone = weekTasks.filter(function (task) { return task.completed; }).length;
     var weekRescheduled = weekTasks.reduce(function (sum, task) {
@@ -1523,7 +1602,7 @@
       '<section class="date-toolbar">' +
         '<button class="button icon" type="button" data-action="previous-day" aria-label="前一天">‹</button>' +
         '<div class="date-center"><strong>' + fullDate(selected) + '</strong><span>' + weekdayName(selected, false) +
-        ' · 第 ' + (courses[0] ? courses[0].week : "—") + ' 周</span></div>' +
+        ' · 第 ' + (academicWeek(selected) || "—") + ' 周</span></div>' +
         '<button class="button icon" type="button" data-action="next-day" aria-label="后一天">›</button>' +
       '</section>' +
       '<div class="week-strip">' + weekHtml + '</div>' +
@@ -1565,13 +1644,14 @@
     var events = courses.map(function (course) {
       return {
         id: course.id,
-        source: "course",
+        source: "task",
         title: course.title,
-        subtitle: course.kind + " · " + course.location,
+        subtitle: [course.courseKind || "课程", course.location].filter(Boolean).join(" · "),
         startMinute: course.startMinute,
         endMinute: course.endMinute,
-        tone: course.conflict ? "conflict" : course.kind === "实验" ? "course-lab" : "course-theory",
+        tone: course.conflict ? "conflict" : course.courseKind === "实验" ? "course-lab" : "course-theory",
         conflict: course.conflict,
+        completed: Boolean(course.completed),
         raw: course
       };
     }).concat(tasks.filter(function (task) {
@@ -1581,7 +1661,7 @@
         id: task.id,
         source: "task",
         title: task.title,
-        subtitle: task.category + " · 弹性任务",
+        subtitle: [task.category, task.location].filter(Boolean).join(" · "),
         startMinute: Number(task.startMinute),
         endMinute: Number(task.endMinute),
         tone: taskTone(task.category),
@@ -1606,7 +1686,7 @@
       var height = Math.max(28, (event.endMinute - event.startMinute) / 60 * HOUR_HEIGHT);
       var width = 100 / event.laneCount;
       var left = event.lane * width;
-      var action = event.source === "task" ? "edit-task" : "course-info";
+      var action = "edit-task";
       var classes = "event " + event.tone + (event.completed ? " completed" : "");
       var subtitle = height >= 46
         ? '<span class="event-meta">' + minuteLabel(event.startMinute) + '–' + minuteLabel(event.endMinute) + '</span>'
@@ -1741,11 +1821,12 @@
   function renderTasks() {
     var query = ui.taskSearch.trim().toLocaleLowerCase("zh-CN");
     var filtered = state.tasks.filter(function (task) {
-      if (ui.taskFilter === "open" && task.completed) return false;
-      if (ui.taskFilter === "done" && !task.completed) return false;
-      if (ui.taskFilter === "inbox" && (task.completed || task.taskDate)) return false;
+      if (ui.taskFilter === "open" && (isCourseTask(task) || task.completed)) return false;
+      if (ui.taskFilter === "done" && (isCourseTask(task) || !task.completed)) return false;
+      if (ui.taskFilter === "inbox" && (isCourseTask(task) || task.completed || task.taskDate)) return false;
+      if (ui.taskFilter === "courses" && !isCourseTask(task)) return false;
       if (query) {
-        var haystack = (task.title + " " + task.category + " " + (task.notes || "") + " " +
+        var haystack = (task.title + " " + task.category + " " + (task.location || "") + " " + (task.notes || "") + " " +
           (task.completionNote || "")).toLocaleLowerCase("zh-CN");
         if (!haystack.includes(query)) return false;
       }
@@ -1755,9 +1836,10 @@
         String(a.taskDate || "9999").localeCompare(String(b.taskDate || "9999")) ||
         String(b.updatedAt || "").localeCompare(String(a.updatedAt || ""));
     });
-    var total = state.tasks.length;
-    var done = state.tasks.filter(function (task) { return task.completed; }).length;
-    var inbox = state.tasks.filter(function (task) { return !task.taskDate && !task.completed; }).length;
+    var regularTasks = state.tasks.filter(function (task) { return !isCourseTask(task); });
+    var total = regularTasks.length;
+    var done = regularTasks.filter(function (task) { return task.completed; }).length;
+    var courseTotal = state.tasks.filter(isCourseTask).length;
     var rescheduled = state.tasks.reduce(function (sum, task) {
       return sum + Number(task.rescheduleCount || 0);
     }, 0);
@@ -1766,6 +1848,7 @@
       ["open", "待完成"],
       ["inbox", "收集箱"],
       ["done", "已完成"],
+      ["courses", "课程"],
       ["all", "全部"]
     ].map(function (pair) {
       return '<button class="filter ' + (ui.taskFilter === pair[0] ? "active" : "") + '" type="button" ' +
@@ -1779,6 +1862,7 @@
         escapeHtml(task.title) + '</span><div class="row-meta"><span class="badge ' +
         categoryBadge(task.category) + '">' + escapeHtml(task.category) + '</span> · ' +
         (task.taskDate ? task.taskDate + time : "未安排日期") +
+        (task.location ? " · " + escapeHtml(task.location) : "") +
         (task.rescheduleCount ? " · 改期 " + task.rescheduleCount + " 次" : "") +
         (actualTimeLabel(task) ? " · 实际 " + actualTimeLabel(task) : "") +
         (task.notes ? " · 说明：" + escapeHtml(task.notes) : "") +
@@ -1789,7 +1873,7 @@
 
     app.innerHTML = '<div class="stats-grid"><div class="stat"><span>任务总数</span><strong>' + total +
       '</strong></div><div class="stat"><span>已完成</span><strong>' + done +
-      '</strong></div><div class="stat"><span>收集箱</span><strong>' + inbox +
+      '</strong></div><div class="stat"><span>课程</span><strong>' + courseTotal +
       '</strong></div><div class="stat"><span>累计改期</span><strong>' + rescheduled +
       '</strong></div></div><section class="panel"><div class="panel-head"><div><h2>统一任务库</h2>' +
       '<p>先收集，再决定放到哪一天、哪个时间段</p></div><button class="button primary small" type="button" ' +
@@ -1859,10 +1943,13 @@
   function openTaskDialog(id, date, startMinute) {
     var task = id ? state.tasks.find(function (row) { return row.id === id; }) : null;
     ui.taskEditingId = task ? task.id : null;
-    document.getElementById("taskDialogTitle").textContent = task ? "编辑任务" : "新增任务";
+    document.getElementById("taskDialogTitle").textContent = task
+      ? (isCourseTask(task) ? "编辑课程" : "编辑任务")
+      : "新增任务";
     document.getElementById("taskTitle").value = task ? task.title : "";
     document.getElementById("taskCategory").value = task ? task.category : "医学";
     document.getElementById("taskDate").value = task ? (task.taskDate || "") : (date || "");
+    document.getElementById("taskLocation").value = task ? (task.location || "") : "";
     var timed = task ? task.startMinute != null : startMinute != null;
     document.getElementById("taskTimed").checked = timed;
     var start = task && task.startMinute != null ? task.startMinute : startMinute != null ? startMinute : 480;
@@ -1969,14 +2056,6 @@
       openTaskDialog(target.getAttribute("data-id"), null, null);
       return;
     }
-    if (action === "course-info") {
-      var course = COURSE_EVENTS.find(function (row) { return row.id === target.getAttribute("data-id"); });
-      if (course) {
-        showToast(course.title + " · " + minuteLabel(course.startMinute) + "–" +
-          minuteLabel(course.endMinute) + " · " + course.location + " · " + course.teacher);
-      }
-      return;
-    }
     if (action === "add-habit") {
       var habitInput = document.getElementById("newHabitInput");
       var title = habitInput ? habitInput.value.trim() : "";
@@ -2044,9 +2123,9 @@
       return;
     }
     if (action === "delete-task") {
-      if (!ui.taskEditingId || !window.confirm("确认删除这个任务？")) return;
+      if (!ui.taskEditingId || !window.confirm("确认删除这个日程项？")) return;
       state.tasks = state.tasks.filter(function (task) { return task.id !== ui.taskEditingId; });
-      saveState("任务已删除");
+      saveState("日程项已删除");
       closeDialog(taskDialog);
       render();
       return;
@@ -2164,9 +2243,14 @@
     var endMinute = timed ? inputToMinute(document.getElementById("taskEnd").value) : null;
     var actualStartMinute = inputToMinute(document.getElementById("taskActualStart").value);
     var actualEndMinute = inputToMinute(document.getElementById("taskActualEnd").value);
+    var location = document.getElementById("taskLocation").value.trim();
     var notes = document.getElementById("taskNotes").value.trim();
     var completionNote = document.getElementById("taskCompletionNote").value.trim();
     if (!title) return;
+    if (category === "课程" && (!taskDate || !timed)) {
+      showToast("课程需要安排日期并放入时间轴；若是弹性事项，请改为其他分类");
+      return;
+    }
     if (timed && (startMinute == null || endMinute == null || endMinute <= startMinute)) {
       showToast("结束时间必须晚于开始时间");
       return;
@@ -2184,6 +2268,7 @@
       existing.endMinute = endMinute;
       existing.actualStartMinute = actualStartMinute;
       existing.actualEndMinute = actualEndMinute;
+      existing.location = location;
       existing.notes = notes;
       existing.completionNote = completionNote;
       existing.rescheduleCount = Number(existing.rescheduleCount || 0) + (changedSchedule ? 1 : 0);
@@ -2198,6 +2283,7 @@
         endMinute: endMinute,
         actualStartMinute: actualStartMinute,
         actualEndMinute: actualEndMinute,
+        location: location,
         completed: false,
         completedAt: null,
         notes: notes,
@@ -2207,7 +2293,7 @@
         updatedAt: new Date().toISOString()
       });
     }
-    saveState(existing ? "任务已更新" : "任务已加入任务库");
+    saveState(existing ? "日程已更新" : "任务已加入任务库");
     closeDialog(taskDialog);
     render();
   });
@@ -2286,7 +2372,7 @@
       app: "Yuki 日程与复盘",
       formatVersion: 1,
       exportedAt: new Date().toISOString(),
-      courseCount: COURSE_EVENTS.length,
+      courseCount: state.tasks.filter(isCourseTask).length,
       data: state
     };
     var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
@@ -2328,7 +2414,7 @@
     var end = kind === "week" ? anchorDate : monthEndDate(anchorDate);
     var dates = dateRange(start, end);
     var tasks = state.tasks.filter(function (task) {
-      return task.taskDate && task.taskDate >= start && task.taskDate <= end;
+      return !isCourseTask(task) && task.taskDate && task.taskDate >= start && task.taskDate <= end;
     });
     var completed = tasks.filter(function (task) { return task.completed; });
     var rescheduled = tasks.reduce(function (sum, task) {
@@ -2362,7 +2448,8 @@
       if (!courses.length) lines.push("- 无");
       courses.forEach(function (course) {
         lines.push("- " + minuteLabel(course.startMinute) + "–" + minuteLabel(course.endMinute) + " " +
-          course.title + "（" + course.kind + "，" + course.location + "）");
+          course.title + "（" + (course.courseKind || "课程") +
+          (course.location ? "，" + course.location : "") + "）");
       });
 
       var dayRows = tasks.filter(function (task) { return task.taskDate === date; }).sort(function (a, b) {
