@@ -610,8 +610,17 @@
           <label class="field-label timed-field">结束时间
             <input id="taskEnd" class="field" type="time" step="900">
           </label>
-          <label class="field-label full">备注
-            <textarea id="taskNotes" class="field" maxlength="500" placeholder="资料、完成标准或下一步"></textarea>
+          <label class="field-label">实际开始（可选）
+            <input id="taskActualStart" class="field" type="time" step="300">
+          </label>
+          <label class="field-label">实际结束（可选）
+            <input id="taskActualEnd" class="field" type="time" step="300">
+          </label>
+          <label class="field-label full">任务说明 / 完成标准
+            <textarea id="taskNotes" class="field" maxlength="2000" placeholder="要做什么、使用哪些资料、做到什么程度才算完成"></textarea>
+          </label>
+          <label class="field-label full">完成记录（可稍后填写）
+            <textarea id="taskCompletionNote" class="field" maxlength="2000" placeholder="完成过程中遇到了什么？哪些方法有效？下次怎样调整？"></textarea>
           </label>
         </div>
       </div>
@@ -759,6 +768,9 @@
       }),
       habitChecks: {},
       reflections: {},
+      weeklyReviews: {},
+      monthlyReviews: {},
+      goalHistory: {},
       goals: [],
       meta: { updatedAt: "" }
     };
@@ -769,10 +781,20 @@
     if (!value || typeof value !== "object") return fallback;
     return {
       version: 1,
-      tasks: Array.isArray(value.tasks) ? value.tasks : [],
+      tasks: Array.isArray(value.tasks) ? value.tasks.map(function (task) {
+        return Object.assign({
+          actualStartMinute: null,
+          actualEndMinute: null,
+          completionNote: "",
+          completedAt: null
+        }, task);
+      }) : [],
       habits: Array.isArray(value.habits) && value.habits.length ? value.habits : fallback.habits,
       habitChecks: value.habitChecks && typeof value.habitChecks === "object" ? value.habitChecks : {},
       reflections: value.reflections && typeof value.reflections === "object" ? value.reflections : {},
+      weeklyReviews: value.weeklyReviews && typeof value.weeklyReviews === "object" ? value.weeklyReviews : {},
+      monthlyReviews: value.monthlyReviews && typeof value.monthlyReviews === "object" ? value.monthlyReviews : {},
+      goalHistory: value.goalHistory && typeof value.goalHistory === "object" ? value.goalHistory : {},
       goals: Array.isArray(value.goals) ? value.goals.map(function (goal) {
         return Object.assign({}, goal, { items: Array.isArray(goal.items) ? goal.items : [] });
       }) : [],
@@ -821,12 +843,33 @@
   }
 
   function saveState(message) {
+    captureGoalSnapshot(todayShanghai());
     state.meta = state.meta || {};
     state.meta.updatedAt = new Date().toISOString();
     var saved = persistState();
     if (message) showToast(message);
     if (saved && CLOUD_ENABLED && authSession) scheduleSync();
     return saved;
+  }
+
+  function captureGoalSnapshot(date) {
+    state.goalHistory = state.goalHistory || {};
+    state.goalHistory[date] = state.goals.map(function (goal) {
+      return {
+        id: goal.id,
+        title: goal.title,
+        progress: goalProgress(goal),
+        items: (goal.items || []).map(function (item) {
+          return {
+            id: item.id,
+            title: item.title,
+            completedCount: Number(item.completedCount || 0),
+            targetCount: Number(item.targetCount || 0),
+            unit: item.unit
+          };
+        })
+      };
+    });
   }
 
   function loadAuthSession() {
@@ -1303,6 +1346,19 @@
     return parts[0] + "年" + Number(parts[1]) + "月" + Number(parts[2]) + "日";
   }
 
+  function monthEndDate(date) {
+    var parts = date.split("-");
+    return toDateString(new Date(Date.UTC(Number(parts[0]), Number(parts[1]), 0)));
+  }
+
+  function monthStartDate(date) {
+    return date.slice(0, 7) + "-01";
+  }
+
+  function isMonthEnd(date) {
+    return date === monthEndDate(date);
+  }
+
   function mondayOf(date) {
     var day = weekdayIndex(date);
     var offset = day === 0 ? -6 : 1 - day;
@@ -1326,6 +1382,18 @@
     if (!value) return null;
     var pieces = value.split(":");
     return Number(pieces[0]) * 60 + Number(pieces[1]);
+  }
+
+  function actualTimeLabel(task) {
+    if (task.actualStartMinute != null && task.actualEndMinute != null) {
+      var duration = Number(task.actualEndMinute) - Number(task.actualStartMinute);
+      if (duration < 0) duration += 1440;
+      return minuteLabel(Number(task.actualStartMinute)) + "–" + minuteLabel(Number(task.actualEndMinute)) +
+        "（" + duration + " 分钟）";
+    }
+    if (task.actualStartMinute != null) return "开始 " + minuteLabel(Number(task.actualStartMinute));
+    if (task.actualEndMinute != null) return "结束 " + minuteLabel(Number(task.actualEndMinute));
+    return "";
   }
 
   function compactNumber(value) {
@@ -1473,6 +1541,7 @@
           renderHabitCard(selected) +
           renderGoalSummary() +
           renderReflectionCard(selected) +
+          renderPeriodicReviewCards(selected) +
           renderWeekStats(weekTasks.length, weekDone, weekRescheduled, weekHabitChecks) +
         '</aside>' +
       '</div>';
@@ -1573,7 +1642,9 @@
         '<span class="row-title">' + escapeHtml(task.title) + '</span>' +
         '<span class="row-meta"><span class="badge ' + categoryBadge(task.category) + '">' +
         escapeHtml(task.category) + '</span> · ' + time +
-        (task.rescheduleCount ? " · 改期 " + task.rescheduleCount + " 次" : "") + '</span></button></div>';
+        (task.rescheduleCount ? " · 改期 " + task.rescheduleCount + " 次" : "") +
+        (actualTimeLabel(task) ? " · 实际 " + actualTimeLabel(task) : "") +
+        (task.completionNote ? " · 有完成记录" : "") + '</span></button></div>';
     }).join("") : '<div class="empty">今天还没有任务。课程外的英语、复习或生活事项可以只放进 To-do，不必强行定时间。</div>';
     var percent = tasks.length ? Math.round(completed / tasks.length * 100) : 0;
     return '<section class="panel"><div class="panel-head"><div><h3>当日 To-do</h3><p>' +
@@ -1628,6 +1699,35 @@
       (reflection ? "已保存" : "尚未填写") + '</div></div></section>';
   }
 
+  function renderPeriodicReviewCards(date) {
+    var cards = "";
+    if (weekdayIndex(date) === 0) {
+      var weekly = state.weeklyReviews[date] || "";
+      var weekStart = mondayOf(date);
+      cards += '<section class="panel wide"><div class="panel-head"><div><h3>周复盘</h3><p>' +
+        formatDate(weekStart) + '–' + formatDate(date) + ' · 可先导出记录交给 AI 分析</p></div>' +
+        '<button class="button small" type="button" data-action="export-week-review" data-date="' +
+        escapeAttr(date) + '">导出本周资料</button></div><div class="panel-body">' +
+        '<label class="sr-only" for="weeklyReviewInput">周复盘</label><textarea id="weeklyReviewInput" class="field" ' +
+        'maxlength="12000" placeholder="把 AI 的分析或你自己的总结粘贴在这里：本周发生了什么、哪些安排有效、下周调整什么？">' +
+        escapeHtml(weekly) + '</textarea><div id="weeklyReviewStatus" class="reflection-status">' +
+        (weekly ? "已保存" : "等待复盘") + '</div></div></section>';
+    }
+    if (isMonthEnd(date)) {
+      var monthKey = date.slice(0, 7);
+      var monthly = state.monthlyReviews[monthKey] || "";
+      cards += '<section class="panel wide"><div class="panel-head"><div><h3>月复盘</h3><p>' +
+        Number(date.slice(5, 7)) + '月 · 汇总任务、时间安排、感悟与目标</p></div>' +
+        '<button class="button small" type="button" data-action="export-month-review" data-date="' +
+        escapeAttr(date) + '">导出本月资料</button></div><div class="panel-body">' +
+        '<label class="sr-only" for="monthlyReviewInput">月复盘</label><textarea id="monthlyReviewInput" class="field" ' +
+        'maxlength="20000" placeholder="把 AI 的分析或你自己的月度总结粘贴在这里：主要变化、反复出现的问题、下月重点。">' +
+        escapeHtml(monthly) + '</textarea><div id="monthlyReviewStatus" class="reflection-status">' +
+        (monthly ? "已保存" : "等待复盘") + '</div></div></section>';
+    }
+    return cards;
+  }
+
   function renderWeekStats(total, completed, rescheduled, habitChecks) {
     var rate = total ? Math.round(completed / total * 100) : 0;
     return '<section class="panel wide"><div class="panel-head"><div><h3>本周统计</h3><p>用于复盘，不用于惩罚自己</p></div></div>' +
@@ -1645,7 +1745,8 @@
       if (ui.taskFilter === "done" && !task.completed) return false;
       if (ui.taskFilter === "inbox" && (task.completed || task.taskDate)) return false;
       if (query) {
-        var haystack = (task.title + " " + task.category + " " + (task.notes || "")).toLocaleLowerCase("zh-CN");
+        var haystack = (task.title + " " + task.category + " " + (task.notes || "") + " " +
+          (task.completionNote || "")).toLocaleLowerCase("zh-CN");
         if (!haystack.includes(query)) return false;
       }
       return true;
@@ -1679,7 +1780,9 @@
         categoryBadge(task.category) + '">' + escapeHtml(task.category) + '</span> · ' +
         (task.taskDate ? task.taskDate + time : "未安排日期") +
         (task.rescheduleCount ? " · 改期 " + task.rescheduleCount + " 次" : "") +
-        (task.notes ? " · " + escapeHtml(task.notes) : "") + '</div></div>' +
+        (actualTimeLabel(task) ? " · 实际 " + actualTimeLabel(task) : "") +
+        (task.notes ? " · 说明：" + escapeHtml(task.notes) : "") +
+        (task.completionNote ? " · 完成记录：" + escapeHtml(task.completionNote) : "") + '</div></div>' +
         '<div class="row-actions"><button class="mini-button" type="button" data-action="edit-task" data-id="' +
         escapeAttr(task.id) + '">编辑</button></div></div>';
     }).join("") : '<div class="empty">这个筛选条件下没有任务。</div>';
@@ -1691,7 +1794,7 @@
       '</strong></div></div><section class="panel"><div class="panel-head"><div><h2>统一任务库</h2>' +
       '<p>先收集，再决定放到哪一天、哪个时间段</p></div><button class="button primary small" type="button" ' +
       'data-action="new-task">＋ 新增任务</button></div><div class="panel-body"><div class="library-toolbar">' +
-      '<label><span class="sr-only">搜索任务</span><input id="taskSearch" class="field" placeholder="搜索任务或备注" value="' +
+      '<label><span class="sr-only">搜索任务</span><input id="taskSearch" class="field" placeholder="搜索任务、说明或完成记录" value="' +
       escapeAttr(ui.taskSearch) + '"></label><div class="filter-group">' + filters +
       '</div><button class="button small" type="button" data-action="go-today">回到今天</button></div>' +
       '<div class="task-table">' + rows + '</div></div></section>';
@@ -1766,7 +1869,12 @@
     var end = task && task.endMinute != null ? task.endMinute : Math.min(1439, start + 60);
     document.getElementById("taskStart").value = minuteLabel(start);
     document.getElementById("taskEnd").value = minuteLabel(end);
+    document.getElementById("taskActualStart").value = task && task.actualStartMinute != null
+      ? minuteLabel(Number(task.actualStartMinute)) : "";
+    document.getElementById("taskActualEnd").value = task && task.actualEndMinute != null
+      ? minuteLabel(Number(task.actualEndMinute)) : "";
     document.getElementById("taskNotes").value = task ? (task.notes || "") : "";
+    document.getElementById("taskCompletionNote").value = task ? (task.completionNote || "") : "";
     document.getElementById("taskDelete").hidden = !task;
     toggleTimedFields();
     showDialog(taskDialog);
@@ -1964,6 +2072,14 @@
       exportData();
       return;
     }
+    if (action === "export-week-review") {
+      exportReviewData("week", target.getAttribute("data-date"));
+      return;
+    }
+    if (action === "export-month-review") {
+      exportReviewData("month", target.getAttribute("data-date"));
+      return;
+    }
     if (action === "import-data") {
       importFile.click();
     }
@@ -1980,6 +2096,7 @@
       var task = state.tasks.find(function (row) { return row.id === target.getAttribute("data-id"); });
       if (!task) return;
       task.completed = target.checked;
+      task.completedAt = target.checked ? new Date().toISOString() : null;
       task.updatedAt = new Date().toISOString();
       saveState(target.checked ? "已记入完成统计" : "已恢复为待完成");
       render();
@@ -2000,6 +2117,20 @@
       saveState();
       var status = document.getElementById("reflectionStatus");
       if (status) status.textContent = "已自动保存";
+      return;
+    }
+    if (target.id === "weeklyReviewInput") {
+      state.weeklyReviews[ui.selectedDate] = target.value;
+      saveState();
+      var weeklyStatus = document.getElementById("weeklyReviewStatus");
+      if (weeklyStatus) weeklyStatus.textContent = "已自动保存";
+      return;
+    }
+    if (target.id === "monthlyReviewInput") {
+      state.monthlyReviews[ui.selectedDate.slice(0, 7)] = target.value;
+      saveState();
+      var monthlyStatus = document.getElementById("monthlyReviewStatus");
+      if (monthlyStatus) monthlyStatus.textContent = "已自动保存";
       return;
     }
     if (target.id === "taskSearch") {
@@ -2031,7 +2162,10 @@
     var timed = document.getElementById("taskTimed").checked && Boolean(taskDate);
     var startMinute = timed ? inputToMinute(document.getElementById("taskStart").value) : null;
     var endMinute = timed ? inputToMinute(document.getElementById("taskEnd").value) : null;
+    var actualStartMinute = inputToMinute(document.getElementById("taskActualStart").value);
+    var actualEndMinute = inputToMinute(document.getElementById("taskActualEnd").value);
     var notes = document.getElementById("taskNotes").value.trim();
+    var completionNote = document.getElementById("taskCompletionNote").value.trim();
     if (!title) return;
     if (timed && (startMinute == null || endMinute == null || endMinute <= startMinute)) {
       showToast("结束时间必须晚于开始时间");
@@ -2048,7 +2182,10 @@
       existing.taskDate = taskDate;
       existing.startMinute = startMinute;
       existing.endMinute = endMinute;
+      existing.actualStartMinute = actualStartMinute;
+      existing.actualEndMinute = actualEndMinute;
       existing.notes = notes;
+      existing.completionNote = completionNote;
       existing.rescheduleCount = Number(existing.rescheduleCount || 0) + (changedSchedule ? 1 : 0);
       existing.updatedAt = new Date().toISOString();
     } else {
@@ -2059,8 +2196,12 @@
         taskDate: taskDate,
         startMinute: startMinute,
         endMinute: endMinute,
+        actualStartMinute: actualStartMinute,
+        actualEndMinute: actualEndMinute,
         completed: false,
+        completedAt: null,
         notes: notes,
+        completionNote: completionNote,
         rescheduleCount: 0,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -2158,6 +2299,133 @@
     link.remove();
     window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
     showToast("备份文件已导出");
+  }
+
+  function dateRange(start, end) {
+    var dates = [];
+    var cursor = start;
+    while (cursor <= end) {
+      dates.push(cursor);
+      cursor = addDays(cursor, 1);
+    }
+    return dates;
+  }
+
+  function downloadText(filename, text) {
+    var blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function buildReviewExport(kind, anchorDate) {
+    var start = kind === "week" ? mondayOf(anchorDate) : monthStartDate(anchorDate);
+    var end = kind === "week" ? anchorDate : monthEndDate(anchorDate);
+    var dates = dateRange(start, end);
+    var tasks = state.tasks.filter(function (task) {
+      return task.taskDate && task.taskDate >= start && task.taskDate <= end;
+    });
+    var completed = tasks.filter(function (task) { return task.completed; });
+    var rescheduled = tasks.reduce(function (sum, task) {
+      return sum + Number(task.rescheduleCount || 0);
+    }, 0);
+    var actualMinutes = tasks.reduce(function (sum, task) {
+      if (task.actualStartMinute == null || task.actualEndMinute == null) return sum;
+      var duration = Number(task.actualEndMinute) - Number(task.actualStartMinute);
+      if (duration < 0) duration += 1440;
+      return sum + duration;
+    }, 0);
+    var habitChecks = Object.keys(state.habitChecks).filter(function (key) {
+      var date = key.split("|")[0];
+      return date >= start && date <= end && state.habitChecks[key];
+    }).length;
+    var lines = [
+      "请根据以下真实记录帮我做" + (kind === "week" ? "周复盘" : "月复盘") + "。",
+      "请分别分析：任务完成与改期、时间安排与实际执行、习惯打卡、感悟中反复出现的主题、目标进度；最后只给出 2–3 条下一周期可执行的调整。不要补充记录中不存在的事实。",
+      "",
+      "【复盘范围】" + fullDate(start) + " 至 " + fullDate(end),
+      "【客观统计】任务 " + tasks.length + " 项；完成 " + completed.length + " 项；完成率 " +
+        (tasks.length ? Math.round(completed.length / tasks.length * 100) : 0) + "%；累计改期 " +
+        rescheduled + " 次；已记录实际用时 " + actualMinutes + " 分钟；习惯打卡 " + habitChecks + " 次。",
+      ""
+    ];
+
+    dates.forEach(function (date) {
+      lines.push("## " + fullDate(date) + " " + weekdayName(date, false));
+      var courses = courseEventsFor(date).slice().sort(function (a, b) { return a.startMinute - b.startMinute; });
+      lines.push("课程：");
+      if (!courses.length) lines.push("- 无");
+      courses.forEach(function (course) {
+        lines.push("- " + minuteLabel(course.startMinute) + "–" + minuteLabel(course.endMinute) + " " +
+          course.title + "（" + course.kind + "，" + course.location + "）");
+      });
+
+      var dayRows = tasks.filter(function (task) { return task.taskDate === date; }).sort(function (a, b) {
+        return (a.startMinute == null ? 9999 : a.startMinute) - (b.startMinute == null ? 9999 : b.startMinute);
+      });
+      lines.push("任务：");
+      if (!dayRows.length) lines.push("- 无");
+      dayRows.forEach(function (task) {
+        var planned = task.startMinute == null ? "弹性安排" :
+          minuteLabel(task.startMinute) + "–" + minuteLabel(task.endMinute);
+        lines.push("- [" + (task.completed ? "已完成" : "未完成") + "] " + task.title + "｜" +
+          task.category + "｜计划 " + planned +
+          (actualTimeLabel(task) ? "｜实际 " + actualTimeLabel(task) : "") +
+          (task.rescheduleCount ? "｜改期 " + task.rescheduleCount + " 次" : ""));
+        if (task.notes) lines.push("  任务说明：" + task.notes.replace(/\n/g, " "));
+        if (task.completionNote) lines.push("  完成记录：" + task.completionNote.replace(/\n/g, " "));
+      });
+
+      var checkedHabits = state.habits.filter(function (habit) {
+        return state.habitChecks[date + "|" + habit.id];
+      }).map(function (habit) { return habit.title; });
+      lines.push("习惯打卡：" + (checkedHabits.length ? checkedHabits.join("、") : "无"));
+      lines.push("当日感悟：" + (state.reflections[date] || "未填写"));
+      lines.push("");
+    });
+
+    lines.push("【当前目标进度】");
+    if (!state.goals.length) lines.push("- 尚未建立目标");
+    state.goals.forEach(function (goal) {
+      lines.push("- " + goal.title + "：" + goalProgress(goal) + "%" +
+        (goal.deadline ? "，截止 " + goal.deadline : ""));
+      (goal.items || []).forEach(function (item) {
+        lines.push("  - " + item.title + "：" + compactNumber(item.completedCount) + "/" +
+          compactNumber(item.targetCount) + " " + item.unit + "，权重 " + compactNumber(item.weight));
+      });
+    });
+    var snapshotDates = Object.keys(state.goalHistory || {}).filter(function (date) {
+      return date >= start && date <= end;
+    }).sort();
+    if (snapshotDates.length) {
+      var selectedSnapshots = snapshotDates.length === 1
+        ? snapshotDates
+        : [snapshotDates[0], snapshotDates[snapshotDates.length - 1]];
+      lines.push("");
+      lines.push("【期间目标进度快照】");
+      selectedSnapshots.forEach(function (date) {
+        lines.push("- " + fullDate(date));
+        var rows = state.goalHistory[date] || [];
+        if (!rows.length) lines.push("  - 当日尚未建立目标");
+        rows.forEach(function (goal) {
+          lines.push("  - " + goal.title + "：" + goal.progress + "%");
+        });
+      });
+    }
+    return lines.join("\n");
+  }
+
+  function exportReviewData(kind, anchorDate) {
+    var start = kind === "week" ? mondayOf(anchorDate) : monthStartDate(anchorDate);
+    var end = kind === "week" ? anchorDate : monthEndDate(anchorDate);
+    var label = kind === "week" ? "周复盘资料" : "月复盘资料";
+    downloadText("Yuki" + label + "_" + start + "_至_" + end + ".txt", buildReviewExport(kind, anchorDate));
+    showToast(label + "已导出");
   }
 
   importFile.addEventListener("change", function () {
